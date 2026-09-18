@@ -9,12 +9,6 @@
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
-  <!-- Toast Notification (Notifikasi Mengambang) -->
-  <div id="toastNotification" class="fixed top-5 left-1/2 transform -translate-x-1/2 -translate-y-20 opacity-0 transition-all duration-300 z-[100] px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-2 font-medium text-sm text-white pointer-events-none">
-    <span id="toastIcon">✅</span>
-    <span id="toastMessage">Pesan</span>
-  </div>
-
   <div id="loginSection" class="flex items-center justify-center flex-grow p-4">
     <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200">
       <div class="text-center mb-6">
@@ -22,24 +16,16 @@
         <h1 class="text-2xl font-bold text-slate-800">Stock Opname</h1>
         <p class="text-sm text-slate-500 mt-1">Silakan masuk menggunakan akun Anda</p>
       </div>
-
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
-          <input type="text" id="username" required 
-            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-base sm:text-sm"
-            placeholder="Masukkan username...">
+          <input type="text" id="username" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" placeholder="Username...">
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-          <input type="password" id="password" required 
-            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-base sm:text-sm"
-            placeholder="Masukkan password...">
+          <input type="password" id="password" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" placeholder="Password...">
         </div>
-        <button type="submit" id="submitBtn"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition duration-200 shadow-md text-base sm:text-sm">
-          Masuk
-        </button>
+        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition shadow-md text-sm">Masuk</button>
       </form>
       <div id="alertBox" class="mt-4 hidden p-3 rounded-xl text-sm text-center"></div>
     </div>
@@ -54,47 +40,30 @@
           <p class="text-[10px] sm:text-xs text-slate-500"><span id="userNameText" class="font-semibold text-slate-700"></span> (<span id="userRoleText" class="uppercase font-bold text-blue-600"></span>)</p>
         </div>
       </div>
-      <button onclick="handleLogout()" 
-        class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition duration-200 border border-rose-200 flex items-center space-x-1">
-        <span>Keluar</span>
-      </button>
+      <button onclick="handleLogout()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition border border-rose-200">Keluar</button>
     </header>
 
     <main class="max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 flex-grow">
       <div class="flex space-x-2 border-b border-slate-200 pb-3 overflow-x-auto">
-        <button onclick="switchTab('products')" id="tabProductsBtn" 
-          class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap">
-          📦 Master Barang & Supplier
-        </button>
-        <button onclick="switchTab('opname')" id="tabOpnameBtn" 
-          class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap">
-          📝 Input Stock Opname
-        </button>
+        <button onclick="switchTab('products')" id="tabProductsBtn" class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap">📦 Master Barang & Supplier</button>
+        <button onclick="switchTab('opname')" id="tabOpnameBtn" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap">📝 Input Stock Opname</button>
       </div>
 
+      <!-- TAB PRODUCTS -->
       <div id="tabProductsContent" class="space-y-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
           <div>
             <h3 class="text-base sm:text-lg font-bold text-slate-800">Daftar Master Barang</h3>
             <p class="text-xs sm:text-sm text-slate-500">Kelola inventaris barang, harga, dan supplier.</p>
           </div>
-          <button onclick="openAddModal()" 
-            class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm text-center">
-            + Tambah Barang Baru
-          </button>
+          <button onclick="openAddModal()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm">+ Tambah Barang Baru</button>
         </div>
-
         <div class="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase font-semibold">
-                  <th class="p-4">Kode SKU</th>
-                  <th class="p-4">Nama Barang</th>
-                  <th class="p-4">Kategori</th>
-                  <th class="p-4">Stok Sistem</th>
-                  <th class="p-4">Harga Satuan</th>
-                  <th class="p-4">Supplier</th>
+                  <th class="p-4">Kode SKU</th><th class="p-4">Nama Barang</th><th class="p-4">Kategori</th><th class="p-4">Stok Sistem</th><th class="p-4">Harga Satuan</th><th class="p-4">Supplier</th>
                 </tr>
               </thead>
               <tbody id="productTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
@@ -103,57 +72,52 @@
             </table>
           </div>
         </div>
-
         <div id="productMobileList" class="md:hidden space-y-3">
           <div class="p-4 bg-white rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">Memuat data barang...</div>
         </div>
       </div>
 
+      <!-- TAB OPNAME -->
       <div id="tabOpnameContent" class="space-y-4 hidden">
         <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto">
-          
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b border-slate-100">
             <div>
               <h3 class="text-base sm:text-lg font-bold text-slate-800">Form Input Hitung Fisik</h3>
               <p class="text-xs text-slate-500">Buat sesi SO, cari barang atau scan barcode.</p>
             </div>
-            <button type="button" onclick="openScannerModal()" 
-              class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5 shadow-sm">
+            <button type="button" onclick="openScannerModal()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5 shadow-sm">
               <span>📷 Scan Barcode Kamera</span>
             </button>
           </div>
 
-          <!-- FITUR BARU: MODE MANUAL VS OTOMATIS -->
+          <!-- MODE SCAN (MANUAL / OTOMATIS) -->
           <div class="mb-5 bg-blue-50 border border-blue-200 p-3 sm:p-4 rounded-xl">
             <h4 class="text-xs font-bold text-blue-800 mb-3 uppercase tracking-wide">Pengaturan Mode Scan</h4>
             <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
               <label class="flex items-center space-x-2 cursor-pointer">
-                <input type="radio" name="soMode" value="manual" checked onchange="toggleSoMode()" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                <input type="radio" name="soMode" value="manual" checked onchange="toggleSoMode()" class="w-4 h-4 text-blue-600">
                 <span class="text-sm font-medium text-slate-700">Manual (Input Jumlah)</span>
               </label>
               <label class="flex items-center space-x-2 cursor-pointer">
-                <input type="radio" name="soMode" value="otomatis" onchange="toggleSoMode()" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                <input type="radio" name="soMode" value="otomatis" onchange="toggleSoMode()" class="w-4 h-4 text-blue-600">
                 <span class="text-sm font-medium text-slate-700">Otomatis (Langsung Simpan)</span>
               </label>
             </div>
             <div id="autoQtyContainer" class="mt-3 pt-3 border-t border-blue-200 hidden flex items-center justify-between sm:justify-start sm:space-x-4">
               <label class="text-xs font-semibold text-slate-600">Set Qty Simpan Otomatis:</label>
-              <input type="number" id="autoQtyInput" value="1" min="1" class="w-24 px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-center focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <input type="number" id="autoQtyInput" value="1" min="1" class="w-24 px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-center">
             </div>
           </div>
 
           <form id="opnameForm" onsubmit="handleSaveOpname(event)" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 items-start">
               <div class="sm:col-span-1">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Judul / Sesi SO</label>
-                <input type="text" id="opnameJudulSesi" required placeholder="Cth: 1" 
-                  class="w-full px-3 py-3 sm:py-2 border border-slate-300 rounded-xl text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Sesi SO</label>
+                <input type="text" id="opnameJudulSesi" required value="1" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm">
               </div>
-
               <div class="sm:col-span-5 relative">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Barang (Ketik SKU atau Nama)</label>
-                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" onblur="handleManualSkuInput()" placeholder="Ketik kombinasi nama / SKU (misal: HVS atau BRG001)..." 
-                  class="w-full px-3 py-3 sm:py-2 border border-slate-300 rounded-xl text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Barang (SKU / Nama)</label>
+                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" onblur="handleManualSkuInput()" placeholder="Ketik nama atau SKU..." class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm">
                 <div id="searchDropdownResults" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50 hidden"></div>
               </div>
             </div>
@@ -164,123 +128,105 @@
             <div class="grid grid-cols-1 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
                 <span class="block text-[11px] font-semibold text-slate-500 mb-1">Nama Barang</span>
-                <input type="text" id="displaySelectedName" readonly placeholder="Belum ada barang dipilih..." oninput="syncManualInputs()"
-                  class="w-full px-3 py-3 sm:py-2 border border-slate-300 bg-white rounded-lg text-base sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <input type="text" id="displaySelectedName" readonly placeholder="Belum ada barang dipilih..." class="w-full px-3 py-2 border border-slate-300 bg-white rounded-lg text-sm font-bold text-slate-800">
               </div>
               <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200">
                 <div>
-                  <span class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1">Stok Sistem</span>
-                  <input type="number" id="displayStokSistem" readonly value="0" min="0" oninput="calculateVariance()"
-                    class="w-full px-2 py-2 border border-slate-300 bg-white rounded-lg text-sm sm:text-sm font-bold text-blue-600 focus:outline-none">
+                  <span class="block text-[10px] text-slate-500 mb-1">Stok Sistem</span>
+                  <input type="number" id="displayStokSistem" readonly value="0" class="w-full px-2 py-1.5 border border-slate-300 bg-white rounded-lg text-sm font-bold text-blue-600">
                 </div>
                 <div>
-                  <span class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1">Harga Satuan (Rp)</span>
-                  <input type="text" id="displayHargaSatuan" readonly value="Rp 0" oninput="syncManualInputs()"
-                    class="w-full px-2 py-2 border border-slate-300 bg-white rounded-lg text-sm sm:text-sm font-bold text-emerald-600 focus:outline-none">
+                  <span class="block text-[10px] text-slate-500 mb-1">Harga Satuan</span>
+                  <input type="text" id="displayHargaSatuan" readonly value="Rp 0" class="w-full px-2 py-1.5 border border-slate-300 bg-white rounded-lg text-sm font-bold text-emerald-600">
                 </div>
                 <div>
-                  <span class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1">Supplier</span>
-                  <input type="text" id="displaySupplier" readonly value="-" oninput="syncManualInputs()"
-                    class="w-full px-2 py-2 border border-slate-300 bg-white rounded-lg text-sm sm:text-sm font-semibold text-slate-700 focus:outline-none">
+                  <span class="block text-[10px] text-slate-500 mb-1">Supplier</span>
+                  <input type="text" id="displaySupplier" readonly value="-" class="w-full px-2 py-1.5 border border-slate-300 bg-white rounded-lg text-sm font-semibold text-slate-700">
                 </div>
               </div>
             </div>
 
             <div id="manualQtyInputContainer">
               <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Stok Fisik (Hasil Hitung)</label>
-              <input type="number" id="opnameStokFisik" min="0" oninput="calculateVariance()" placeholder="Masukkan hasil hitung fisik..." 
-                class="w-full px-3 py-3 sm:py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <input type="number" id="opnameStokFisik" min="0" oninput="calculateVariance()" placeholder="Masukkan hasil hitung fisik..." class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm">
             </div>
 
-            <div id="varianceResultBox" class="hidden p-3 rounded-xl text-xs sm:text-sm font-medium text-center">
-              Selisih: <span id="varianceText">0</span>
-            </div>
+            <div id="varianceResultBox" class="hidden p-3 rounded-xl text-xs sm:text-sm font-medium text-center">Selisih: <span id="varianceText">0</span></div>
 
             <div id="keteranganContainer">
               <label class="block text-xs font-semibold text-slate-600 mb-1">Keterangan / Catatan (Opsional)</label>
-              <input type="text" id="opnameKeterangan" placeholder="Contoh: Barang rusak sebagian / Selisih wajar" 
-                class="w-full px-3 py-3 sm:py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <input type="text" id="opnameKeterangan" placeholder="Contoh: Rusak / Selisih wajar" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm">
             </div>
 
-            <button type="submit" id="saveOpnameBtn"
-              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 rounded-xl transition shadow-sm text-base sm:text-sm">
-              Simpan Hasil Opname
-            </button>
+            <button type="submit" id="saveOpnameBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 rounded-xl transition shadow-sm text-sm">Simpan Hasil Opname</button>
           </form>
         </div>
 
+        <!-- RIWAYAT OPNAME -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-4">
-          <h4 class="font-bold text-slate-800 text-base mb-3">Riwayat Hasil Opname</h4>
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="font-bold text-slate-800 text-base">Riwayat Hasil Opname</h4>
+            <button onclick="loadOpnameHistory()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium text-slate-600">🔄 Muat Ulang Riwayat</button>
+          </div>
           <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase font-semibold">
-                  <th class="p-3">Waktu</th>
-                  <th class="p-3">Sesi SO</th>
-                  <th class="p-3">SKU & Barang</th>
-                  <th class="p-3">Sistem</th>
-                  <th class="p-3">Fisik</th>
-                  <th class="p-3">Selisih</th>
-                  <th class="p-3">Supplier</th>
-                  <th class="p-3">Petugas</th>
-                  <th class="p-3">Ket</th>
+                  <th class="p-3">Waktu</th><th class="p-3">Sesi</th><th class="p-3">SKU & Barang</th><th class="p-3">Sistem</th><th class="p-3">Fisik</th><th class="p-3">Selisih</th><th class="p-3">Supplier</th><th class="p-3">Petugas</th><th class="p-3">Ket</th>
                 </tr>
               </thead>
               <tbody id="opnameHistoryBody" class="divide-y divide-slate-100 text-xs text-slate-700">
-                <tr><td colspan="9" class="p-4 text-center text-slate-400">Belum ada riwayat opname.</td></tr>
+                <tr><td colspan="9" class="p-4 text-center text-slate-400">Memuat riwayat...</td></tr>
               </tbody>
             </table>
           </div>
           <div id="opnameHistoryMobile" class="md:hidden space-y-3">
-            <div class="text-center text-slate-400 text-xs py-4">Belum ada riwayat opname.</div>
+            <div class="text-center text-slate-400 text-xs py-4">Memuat riwayat...</div>
           </div>
         </div>
       </div>
     </main>
   </div>
 
-  <div id="scannerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+  <!-- MODAL SCANNER KAMERA (DIOPTIMALKAN SUPAYA LANGSUNG BACA BARCODE) -->
+  <div id="scannerModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 border border-slate-200">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 class="font-bold text-slate-800 text-base">Scan Barcode Kamera</h3>
         <button type="button" onclick="closeScannerModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl px-2">&times;</button>
       </div>
-      <div class="text-xs text-slate-500">Arahkan kamera ke barcode SKU barang agar terdeteksi otomatis.</div>
+      <div class="text-xs text-slate-500 text-center">Arahkan kamera ke garis barcode produk.</div>
       
-      <div id="reader" class="w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-900 min-h-[240px]"></div>
+      <div id="reader" class="w-full rounded-xl overflow-hidden border border-slate-200 bg-black min-h-[260px]"></div>
       <div id="scannerErrorMsg" class="hidden text-xs text-rose-600 bg-rose-50 p-2 rounded-lg text-center font-medium"></div>
 
       <div class="flex justify-end pt-1">
-        <button type="button" onclick="closeScannerModal()" 
-          class="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition">
-          Tutup Scanner
-        </button>
+        <button type="button" onclick="closeScannerModal()" class="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold">Tutup Kamera</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL ADD BARANG OMITTED FOR BREVITY BUT KEPT IN CODE -->
+  <!-- MODAL TAMBAH BARANG -->
   <div id="addModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
-    <!-- ... (Sama seperti sebelumnya) ... -->
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="font-bold text-slate-800 text-base sm:text-lg">Tambah Barang Baru</h3>
-        <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+        <h3 class="font-bold text-slate-800 text-base">Tambah Barang Baru</h3>
+        <button onclick="closeAddModal()" class="text-slate-400 font-bold text-xl">&times;</button>
       </div>
       <form id="addProductForm" onsubmit="handleSaveProduct(event)" class="space-y-3">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Kode SKU</label><input type="text" id="addSku" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Kategori</label><input type="text" id="addKategori" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Kode SKU</label><input type="text" id="addSku" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Kategori</label><input type="text" id="addKategori" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
         </div>
-        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Barang</label><input type="text" id="addNama" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"></div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Stok Awal</label><input type="number" id="addStok" required min="0" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Harga (Rp)</label><input type="number" id="addHarga" required min="0" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"></div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Barang</label><input type="text" id="addNama" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Stok Awal</label><input type="number" id="addStok" required min="0" class="w-full px-3 py-2 border rounded-xl text-sm"></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Harga (Rp)</label><input type="number" id="addHarga" required min="0" class="w-full px-3 py-2 border rounded-xl text-sm"></div>
         </div>
-        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Supplier</label><input type="text" id="addSupplier" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"></div>
-        <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
-          <button type="button" onclick="closeAddModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium">Batal</button>
-          <button type="submit" id="saveProductBtn" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium">Simpan Barang</button>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Supplier</label><input type="text" id="addSupplier" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
+        <div class="flex justify-end space-x-2 pt-3 border-t">
+          <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm">Simpan</button>
         </div>
       </form>
     </div>
@@ -288,66 +234,13 @@
 
   <script>
     // --- GANTI URL INI DENGAN URL WEB APP GAS ANDA ---
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz-iY-96QdoRzYWZL5cZsAPSlbXKXgmThpGY3Ge0veo4sfzFpw5CnU4uBMNIvgpQT6R-w/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyj5Ij00l-Btb_8qm5fVsUFOcS6pBwqV1t3dmqJV-8UugHGZY1V972vdUaCj0wy36MIog/exec"; 
 
     let globalProducts = [];
     let currentUserNama = '';
     let html5QrCode = null;
     let isScannerRunning = false;
     let isProcessingScan = false;
-    let toastTimeout;
-
-    // FUNGSI TOAST NOTIFICATION
-    function showToast(message, type = 'success') {
-      const toast = document.getElementById('toastNotification');
-      const icon = document.getElementById('toastIcon');
-      const msg = document.getElementById('toastMessage');
-      
-      clearTimeout(toastTimeout);
-      
-      if (type === 'success') {
-        toast.className = "fixed top-5 left-1/2 transform -translate-x-1/2 transition-all duration-300 z-[100] px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-2 font-medium text-sm text-white bg-emerald-600 pointer-events-none";
-        icon.textContent = "✅";
-      } else if (type === 'process') {
-        toast.className = "fixed top-5 left-1/2 transform -translate-x-1/2 transition-all duration-300 z-[100] px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-2 font-medium text-sm text-white bg-blue-600 pointer-events-none";
-        icon.textContent = "⏳";
-      } else {
-        toast.className = "fixed top-5 left-1/2 transform -translate-x-1/2 transition-all duration-300 z-[100] px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-2 font-medium text-sm text-white bg-rose-600 pointer-events-none";
-        icon.textContent = "❌";
-      }
-      
-      msg.textContent = message;
-      
-      toast.classList.remove('-translate-y-20', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-      
-      toastTimeout = setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('-translate-y-20', 'opacity-0');
-      }, 3000);
-    }
-
-    // FUNGSI TOGGLE MODE MANUAL/OTOMATIS
-    function toggleSoMode() {
-      const mode = document.querySelector('input[name="soMode"]:checked').value;
-      const autoQtyContainer = document.getElementById('autoQtyContainer');
-      const inputFisik = document.getElementById('opnameStokFisik');
-      
-      if (mode === 'otomatis') {
-        autoQtyContainer.classList.remove('hidden');
-        inputFisik.required = false;
-        // Di mode otomatis, kita opsional menyembunyikan form qty manual agar lebih rapi
-        document.getElementById('manualQtyInputContainer').classList.add('hidden');
-        document.getElementById('keteranganContainer').classList.add('hidden');
-        document.getElementById('saveOpnameBtn').classList.add('hidden');
-      } else {
-        autoQtyContainer.classList.add('hidden');
-        inputFisik.required = true;
-        document.getElementById('manualQtyInputContainer').classList.remove('hidden');
-        document.getElementById('keteranganContainer').classList.remove('hidden');
-        document.getElementById('saveOpnameBtn').classList.remove('hidden');
-      }
-    }
 
     async function callGasApi(action, payload = {}) {
       try {
@@ -358,7 +251,7 @@
         });
         return await response.json();
       } catch (error) {
-        throw new Error("Gagal terhubung ke database.");
+        return { status: 'error', message: 'Koneksi jaringan gagal' };
       }
     }
 
@@ -374,52 +267,39 @@
         loadProducts();
         loadOpnameHistory();
       }
-      toggleSoMode(); // Initialize mode
+      toggleSoMode();
     };
 
     function handleLogin(event) {
       event.preventDefault();
       const submitBtn = document.getElementById('submitBtn');
       const alertBox = document.getElementById('alertBox');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Memeriksa...';
+      submitBtn.disabled = true; submitBtn.textContent = 'Memeriksa...';
       alertBox.classList.add('hidden');
 
-      callGasApi('login', { 
-        username: document.getElementById('username').value, 
-        password: document.getElementById('password').value 
-      }).then(response => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Masuk';
-        if (response.status === 'success') {
-          currentUserNama = response.nama;
-          localStorage.setItem('so_user_nama', response.nama);
-          localStorage.setItem('so_user_role', response.role);
-          document.getElementById('loginSection').classList.add('hidden');
-          document.getElementById('dashboardSection').classList.remove('hidden');
-          document.getElementById('userNameText').textContent = response.nama;
-          document.getElementById('userRoleText').textContent = response.role;
-          loadProducts();
-          loadOpnameHistory();
-        } else {
-          alertBox.textContent = response.message;
-          alertBox.className = 'mt-4 p-3 rounded-xl text-sm text-center bg-rose-50 text-rose-700 border border-rose-200 block';
-        }
-      }).catch(error => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Masuk';
-        alertBox.textContent = error.message;
-        alertBox.className = 'mt-4 p-3 rounded-xl text-sm text-center bg-rose-50 text-rose-700 border border-rose-200 block';
-      });
+      callGasApi('login', { username: document.getElementById('username').value, password: document.getElementById('password').value })
+        .then(response => {
+          submitBtn.disabled = false; submitBtn.textContent = 'Masuk';
+          if (response.status === 'success') {
+            currentUserNama = response.nama;
+            localStorage.setItem('so_user_nama', response.nama);
+            localStorage.setItem('so_user_role', response.role);
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('userNameText').textContent = response.nama;
+            document.getElementById('userRoleText').textContent = response.role;
+            loadProducts(); loadOpnameHistory();
+          } else {
+            alertBox.textContent = response.message;
+            alertBox.className = 'mt-4 p-3 rounded-xl text-sm text-center bg-rose-50 text-rose-700 border border-rose-200 block';
+          }
+        });
     }
 
     function handleLogout() {
-      if (confirm("Apakah Anda yakin ingin keluar?")) {
-        localStorage.removeItem('so_user_nama');
-        localStorage.removeItem('so_user_role');
-        document.getElementById('loginForm').reset();
-        document.getElementById('dashboardSection').classList.add('hidden');
-        document.getElementById('loginSection').classList.remove('hidden');
+      if (confirm("Keluar dari aplikasi?")) {
+        localStorage.clear();
+        location.reload();
       }
     }
 
@@ -432,13 +312,31 @@
       if (tabName === 'products') {
         btnProd.className = 'px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap';
         btnOp.className = 'px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
-        contProd.classList.remove('hidden');
-        contOp.classList.add('hidden');
+        contProd.classList.remove('hidden'); contOp.classList.add('hidden');
       } else {
         btnOp.className = 'px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
         btnProd.className = 'px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
-        contOp.classList.remove('hidden');
-        contProd.classList.add('hidden');
+        contOp.classList.remove('hidden'); contProd.classList.add('hidden');
+        loadOpnameHistory(); // Otomatis refresh riwayat saat buka tab SO
+      }
+    }
+
+    function toggleSoMode() {
+      const mode = document.querySelector('input[name="soMode"]:checked').value;
+      const autoQtyContainer = document.getElementById('autoQtyContainer');
+      const inputFisik = document.getElementById('opnameStokFisik');
+      if (mode === 'otomatis') {
+        autoQtyContainer.classList.remove('hidden');
+        inputFisik.required = false;
+        document.getElementById('manualQtyInputContainer').classList.add('hidden');
+        document.getElementById('keteranganContainer').classList.add('hidden');
+        document.getElementById('saveOpnameBtn').classList.add('hidden');
+      } else {
+        autoQtyContainer.classList.add('hidden');
+        inputFisik.required = true;
+        document.getElementById('manualQtyInputContainer').classList.remove('hidden');
+        document.getElementById('keteranganContainer').classList.remove('hidden');
+        document.getElementById('saveOpnameBtn').classList.remove('hidden');
       }
     }
 
@@ -455,64 +353,31 @@
       const tbody = document.getElementById('productTableBody');
       const mobileList = document.getElementById('productMobileList');
       if (products.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada data barang.</td></tr>`;
-        mobileList.innerHTML = `<div class="p-4 bg-white rounded-2xl text-center text-slate-400 text-sm">Belum ada data barang.</div>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada barang.</td></tr>`;
+        mobileList.innerHTML = `<div class="p-4 bg-white rounded-2xl text-center text-slate-400 text-sm">Belum ada barang.</div>`;
         return;
       }
       let htmlDesktop = '', htmlMobile = '';
       products.forEach(p => {
-        const formattedHarga = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.harga);
-        htmlDesktop += `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="p-4 font-semibold text-slate-800">${p.sku}</td>
-            <td class="p-4">${p.nama}</td>
-            <td class="p-4"><span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium">${p.kategori}</span></td>
-            <td class="p-4 font-bold text-blue-600">${p.stok}</td>
-            <td class="p-4 font-medium text-emerald-600">${formattedHarga}</td>
-            <td class="p-4 text-slate-600">${p.supplier}</td>
-          </tr>
-        `;
-        htmlMobile += `
-          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-            <div class="flex justify-between items-start">
-              <div><span class="text-xs font-bold text-blue-600">${p.sku}</span><h4 class="font-bold text-slate-800 text-sm">${p.nama}</h4></div>
-              <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-medium">${p.kategori}</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
-              <div><span class="text-slate-400">Stok:</span> <span class="font-bold text-blue-600">${p.stok}</span></div>
-              <div><span class="text-slate-400">Harga:</span> <span class="font-bold text-emerald-600">${formattedHarga}</span></div>
-            </div>
-          </div>
-        `;
+        const fmtHarga = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.harga);
+        htmlDesktop += `<tr class="hover:bg-slate-50 transition"><td class="p-4 font-semibold">${p.sku}</td><td class="p-4">${p.nama}</td><td class="p-4"><span class="px-2 py-1 bg-slate-100 rounded text-xs">${p.kategori}</span></td><td class="p-4 font-bold text-blue-600">${p.stok}</td><td class="p-4 font-medium text-emerald-600">${fmtHarga}</td><td class="p-4">${p.supplier}</td></tr>`;
+        htmlMobile += `<div class="bg-white p-4 rounded-2xl border shadow-sm space-y-1"><div class="flex justify-between"><span class="text-xs font-bold text-blue-600">${p.sku}</span><span class="text-xs bg-slate-100 px-2 rounded">${p.kategori}</span></div><h4 class="font-bold text-sm">${p.nama}</h4><div class="text-xs grid grid-cols-2 pt-1"><div>Stok: <b class="text-blue-600">${p.stok}</b></div><div>Harga: <b class="text-emerald-600">${fmtHarga}</b></div></div></div>`;
       });
       tbody.innerHTML = htmlDesktop;
       mobileList.innerHTML = htmlMobile;
     }
 
     function filterProductDropdown() {
-      const rawKeyword = document.getElementById('productSearchInput').value.toLowerCase().trim();
+      const raw = document.getElementById('productSearchInput').value.toLowerCase().trim();
       const dropdown = document.getElementById('searchDropdownResults');
-      if (rawKeyword === "") { dropdown.classList.add('hidden'); return; }
-
-      const keywords = rawKeyword.split(/\s+/);
-      const filtered = globalProducts.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => {
-        return keywords.every(kw => (p.sku + " " + p.nama).toLowerCase().includes(kw));
-      });
-
-      if (filtered.length === 0) {
-        dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Barang tidak ada (Input manual)</div>`;
-        dropdown.classList.remove('hidden');
-        return;
-      }
+      if (raw === "") { dropdown.classList.add('hidden'); return; }
+      const filtered = globalProducts.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => (p.sku + " " + p.nama).toLowerCase().includes(raw));
+      if (filtered.length === 0) { dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Barang tidak ada (Input Manual)</div>`; dropdown.classList.remove('hidden'); return; }
       let html = '';
       filtered.forEach(item => {
-        html += `<div onclick="selectProductByIndex(${item.originalIndex})" class="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 transition text-sm">
-            <div class="font-bold text-slate-800">${item.sku} - ${item.nama}</div>
-            <div class="text-xs text-slate-500">Stok: ${item.stok} | Sup: ${item.supplier || '-'}</div>
-          </div>`;
+        html += `<div onclick="selectProductByIndex(${item.originalIndex})" class="p-3 hover:bg-slate-50 cursor-pointer border-b text-sm"><div class="font-bold">${item.sku} - ${item.nama}</div><div class="text-xs text-slate-500">Stok: ${item.stok} | Sup: ${item.supplier}</div></div>`;
       });
-      dropdown.innerHTML = html;
-      dropdown.classList.remove('hidden');
+      dropdown.innerHTML = html; dropdown.classList.remove('hidden');
     }
 
     function selectProductByIndex(idx) {
@@ -527,13 +392,11 @@
       document.getElementById('searchDropdownResults').classList.add('hidden');
       document.getElementById('varianceResultBox').classList.add('hidden');
 
-      // JIKA MODE OTOMATIS: LANGSUNG SIMPAN!
       const mode = document.querySelector('input[name="soMode"]:checked').value;
       if (mode === 'otomatis') {
-        const autoQty = document.getElementById('autoQtyInput').value;
-        document.getElementById('opnameStokFisik').value = autoQty;
+        document.getElementById('opnameStokFisik').value = document.getElementById('autoQtyInput').value;
         document.getElementById('opnameKeterangan').value = "Scan Otomatis";
-        handleSaveOpname(); // Eksekusi form save
+        handleSaveOpname();
       } else {
         document.getElementById('opnameStokFisik').value = "";
       }
@@ -543,12 +406,9 @@
       const cleanSku = skuCode.toLowerCase().trim();
       const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === cleanSku);
       const mode = document.querySelector('input[name="soMode"]:checked').value;
-
       if (idx !== -1) {
-        selectProductByIndex(idx); // ini akan memicu auto-save jika mode otomatis
-        if (mode === 'manual') {
-          closeScannerModal(); // Tutup scanner jika manual agar bisa ngetik Qty
-        }
+        selectProductByIndex(idx);
+        if (mode === 'manual') closeScannerModal();
       } else {
         closeScannerModal();
         enableManualEntry(skuCode);
@@ -576,37 +436,43 @@
       document.getElementById('displaySupplier').value = "";
       document.getElementById('displaySupplier').readOnly = false;
       document.getElementById('searchDropdownResults').classList.add('hidden');
-      
-      const mode = document.querySelector('input[name="soMode"]:checked').value;
-      if (mode === 'otomatis') {
-        showToast("Barang tidak ada di Master. Input Manual dibutuhkan.", "error");
-        document.querySelector('input[name="soMode"][value="manual"]').click(); // Paksa ke manual
-      }
     }
 
+    // FUNGSI INISIALISASI KAMERA YANG DIOPTIMALKAN AGAR LANGSUNG BACA BARCODE
     function openScannerModal() {
       const modal = document.getElementById('scannerModal');
       const errBox = document.getElementById('scannerErrorMsg');
       modal.classList.remove('hidden'); modal.classList.add('flex');
-      
+      errBox.classList.add('hidden');
+
       setTimeout(() => {
-        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 220, height: 140 } }, 
-        (decodedText) => {
-          if (isProcessingScan) return; // Cegah scan dobel
-          isProcessingScan = true;
-          
-          selectProductBySku(decodedText);
-          
-          // Jeda scanner 1.5 detik jika otomatis agar tidak scan ratusan kali
-          const mode = document.querySelector('input[name="soMode"]:checked').value;
-          if (mode === 'otomatis') {
-            setTimeout(() => { isProcessingScan = false; }, 1500);
-          } else {
-            isProcessingScan = false; // Reset instant kalo manual krn kamera lgsg mati
-          }
-        }).then(() => isScannerRunning = true).catch(err => {
-          errBox.textContent = "Kamera tidak dapat diakses."; errBox.classList.remove('hidden');
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("reader");
+        }
+        
+        // Konfigurasi QR / Barcode reader dipercepat fps dan aspek rasionya
+        const config = { 
+          fps: 20, 
+          qrbox: { width: 250, height: 150 },
+          aspectRatio: 1.0 
+        };
+
+        html5QrCode.start(
+          { facingMode: "environment" }, 
+          config, 
+          (decodedText) => {
+            if (isProcessingScan) return;
+            isProcessingScan = true;
+            selectProductBySku(decodedText);
+            
+            setTimeout(() => { isProcessingScan = false; }, 1200);
+          },
+          (error) => {} // Abaikan error frame kosong
+        ).then(() => {
+          isScannerRunning = true;
+        }).catch(err => {
+          errBox.textContent = "Kamera tidak diizinkan atau tidak ditemukan.";
+          errBox.classList.remove('hidden');
         });
       }, 300);
     }
@@ -614,38 +480,43 @@
     function closeScannerModal() {
       if (html5QrCode && isScannerRunning) {
         html5QrCode.stop().then(() => {
-          isScannerRunning = false; html5QrCode.clear();
+          isScannerRunning = false;
+          html5QrCode.clear();
+          document.getElementById('scannerModal').classList.add('hidden');
+        }).catch(() => {
+          isScannerRunning = false;
           document.getElementById('scannerModal').classList.add('hidden');
         });
+      } else {
+        document.getElementById('scannerModal').classList.add('hidden');
       }
     }
 
     function calculateVariance() {
       const stokSistem = Number(document.getElementById('displayStokSistem').value) || 0;
-      const stokFisikVal = document.getElementById('opnameStokFisik').value;
+      const val = document.getElementById('opnameStokFisik').value;
       const box = document.getElementById('varianceResultBox');
       const text = document.getElementById('varianceText');
-      if (stokFisikVal === "") { box.classList.add('hidden'); return; }
-
-      const selisih = Number(stokFisikVal) - stokSistem;
+      if (val === "") { box.classList.add('hidden'); return; }
+      const selisih = Number(val) - stokSistem;
       box.classList.remove('hidden');
       if (selisih === 0) { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-emerald-50 text-emerald-700'; text.textContent = '0 (Sesuai)'; }
       else if (selisih > 0) { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-blue-50 text-blue-700'; text.textContent = `+${selisih} (Surplus)`; }
       else { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-rose-50 text-rose-700'; text.textContent = `${selisih} (Minus)`; }
     }
 
+    // FUNGSI PENYIMPANAN TANPA NOTIFIKASI BERAT (SILENT BACKGROUND SAVE)
     function handleSaveOpname(event) {
       if(event) event.preventDefault();
       const idx = document.getElementById('selectedProductIndex').value;
-      if (idx === "") { showToast("Pilih barang terlebih dahulu!", "error"); return; }
+      if (idx === "") { alert("Pilih barang terlebih dahulu!"); return; }
 
-      const judulSesi = document.getElementById('opnameJudulSesi').value;
-      const stokFisik = document.getElementById('opnameStokFisik').value;
-      const keterangan = document.getElementById('opnameKeterangan').value;
       const isManual = document.getElementById('isManualEntry').value === "true";
-
       let payload = {
-        judulSesi: judulSesi, stokFisik: stokFisik, petugas: currentUserNama, keterangan: keterangan
+        judulSesi: document.getElementById('opnameJudulSesi').value || "1",
+        stokFisik: document.getElementById('opnameStokFisik').value,
+        petugas: currentUserNama,
+        keterangan: document.getElementById('opnameKeterangan').value || "-"
       };
 
       if (isManual) {
@@ -659,10 +530,7 @@
         payload.sku = p.sku; payload.namaBarang = p.nama; payload.stokSistem = p.stok; payload.harga = p.harga; payload.supplier = p.supplier || "-";
       }
 
-      // 1. MUNCULKAN TOAST PROGRESS
-      showToast(`Sedang menyimpan ${payload.sku}...`, 'process');
-
-      // 2. RESET FORM LANGSUNG (OPTIMISTIC UI) agar bisa scan barang selanjutnya TANPA NUNGGU
+      // Bersihkan form secara instan (0 detik jeda untuk pengguna)
       document.getElementById('opnameStokFisik').value = "";
       document.getElementById('selectedProductIndex').value = "";
       document.getElementById('isManualEntry').value = "false";
@@ -672,26 +540,13 @@
       document.getElementById('displayHargaSatuan').value = "Rp 0";
       document.getElementById('displaySupplier').value = "-";
       document.getElementById('varianceResultBox').classList.add('hidden');
-      
-      // Jika mode otomatis, fokuskan kembali input cari barang / biarkan kamera menyala
-      const mode = document.querySelector('input[name="soMode"]:checked').value;
-      if(mode === 'manual' && !isScannerRunning) {
-         document.getElementById('productSearchInput').focus();
-      }
 
-      // 3. SIMPAN DI LATAR BELAKANG (FIRE AND FORGET)
-      callGasApi('saveOpname', payload)
-        .then(response => {
-          if (response.status === 'success') {
-            showToast(`${payload.sku} berhasil disimpan!`);
-            loadOpnameHistory(); // Refresh riwayat diem-diem
-          } else {
-            showToast(`Gagal: ${response.message}`, "error");
-          }
-        })
-        .catch(error => {
-          showToast(`Koneksi Gagal: ${error.message}`, "error");
-        });
+      // Kirim data ke Google Sheets di latar belakang tanpa pop-up mengganggu
+      callGasApi('saveOpname', payload).then(res => {
+        if (res.status === 'success') {
+          loadOpnameHistory(); // Perbarui riwayat otomatis secara diam-diam
+        }
+      });
     }
 
     function loadOpnameHistory() {
@@ -699,27 +554,37 @@
         if (response.status === 'success') {
           const tbody = document.getElementById('opnameHistoryBody');
           const mobileList = document.getElementById('opnameHistoryMobile');
-          if (response.data.length === 0) return;
+          const data = response.data;
           
+          if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">Belum ada riwayat opname.</td></tr>`;
+            mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-4">Belum ada riwayat opname.</div>`;
+            return;
+          }
+
           let htmlDesktop = '', htmlMobile = '';
-          response.data.forEach(h => {
+          data.forEach(h => {
             let badge = h.selisih === 0 ? `<span class="text-emerald-600 font-bold">0</span>` : (h.selisih > 0 ? `<span class="text-blue-600 font-bold">+${h.selisih}</span>` : `<span class="text-rose-600 font-bold">${h.selisih}</span>`);
-            htmlDesktop += `<tr class="border-b border-slate-50"><td class="p-3 text-[11px]">${h.waktu}</td><td class="p-3 font-semibold text-blue-600">${h.judulSesi}</td><td class="p-3 font-semibold">${h.sku} - ${h.namaBarang}</td><td class="p-3">${h.stokSistem}</td><td class="p-3 font-bold">${h.stokFisik}</td><td class="p-3">${badge}</td><td class="p-3">${h.petugas}</td></tr>`;
+            
+            htmlDesktop += `<tr class="hover:bg-slate-50 border-b"><td class="p-3 text-[11px]">${h.waktu}</td><td class="p-3 font-semibold text-blue-600">${h.judulSesi}</td><td class="p-3 font-semibold">${h.sku} - ${h.namaBarang}</td><td class="p-3">${h.stokSistem}</td><td class="p-3 font-bold">${h.stokFisik}</td><td class="p-3">${badge}</td><td class="p-3">${h.supplier}</td><td class="p-3 text-[11px]">${h.petugas}</td><td class="p-3 text-[11px]">${h.keterangan}</td></tr>`;
+            
+            htmlMobile += `<div class="bg-slate-50 p-3 rounded-xl border text-xs space-y-1"><div class="flex justify-between text-[10px] text-slate-400"><span>${h.waktu}</span><span class="font-bold text-blue-600">Sesi: ${h.judulSesi}</span></div><div class="font-bold text-slate-800">${h.sku} - ${h.namaBarang}</div><div class="grid grid-cols-3 gap-1 py-1"><div>Sistem: <b>${h.stokSistem}</b></div><div>Fisik: <b>${h.stokFisik}</b></div><div>Selisih: ${badge}</div></div><div class="text-[11px] text-slate-500 pt-1 border-t flex justify-between"><span>Sup: <b>${h.supplier}</b></span><span>Oleh: ${h.petugas}</span></div></div>`;
           });
           tbody.innerHTML = htmlDesktop;
+          mobileList.innerHTML = htmlMobile;
         }
       });
     }
 
     function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); document.getElementById('addModal').classList.add('flex'); }
     function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); document.getElementById('addModal').classList.remove('flex'); document.getElementById('addProductForm').reset(); }
+    
     function handleSaveProduct(event) {
       event.preventDefault();
       const payload = { sku: document.getElementById('addSku').value, nama: document.getElementById('addNama').value, kategori: document.getElementById('addKategori').value, stok: document.getElementById('addStok').value, harga: document.getElementById('addHarga').value, supplier: document.getElementById('addSupplier').value };
-      showToast("Menyimpan barang baru...", "process");
       closeAddModal();
       callGasApi('addProduct', payload).then(r => {
-        if (r.status === 'success') { showToast("Barang baru berhasil ditambahkan!"); loadProducts(); } else { showToast("Gagal: " + r.message, "error"); }
+        if (r.status === 'success') { loadProducts(); } else { alert("Gagal tambah barang"); }
       });
     }
   </script>
