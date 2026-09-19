@@ -9,6 +9,7 @@
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
+  <!-- ==================== HALAMAN LOGIN ==================== -->
   <div id="loginSection" class="flex items-center justify-center flex-grow p-4">
     <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200">
       <div class="text-center mb-6">
@@ -27,14 +28,12 @@
             class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-base sm:text-sm"
             placeholder="Masukkan username...">
         </div>
-
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
           <input type="password" id="password" required 
             class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-base sm:text-sm"
             placeholder="Masukkan password...">
         </div>
-
         <button type="submit" id="submitBtn"
           class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition duration-200 shadow-md text-base sm:text-sm">
           Masuk
@@ -44,8 +43,9 @@
     </div>
   </div>
 
+  <!-- ==================== DASHBOARD UTAMA ==================== -->
   <div id="dashboardSection" class="hidden flex-grow flex flex-col">
-    <!-- Navbar Responsive -->
+    <!-- Navbar -->
     <header class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm sticky top-0 z-40">
       <div class="flex items-center space-x-2.5">
         <div id="headerLogoContainer">
@@ -68,7 +68,8 @@
     </header>
 
     <main class="max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 flex-grow">
-      <!-- Tab Navigation -->
+      
+      <!-- Tab Navigasi -->
       <div class="flex space-x-2 border-b border-slate-200 pb-3 overflow-x-auto" id="tabNavContainer">
         <button onclick="switchTab('products')" id="tabProductsBtn" 
           class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap">
@@ -80,6 +81,7 @@
         </button>
       </div>
 
+      <!-- TAB 1: MASTER BARANG -->
       <div id="tabProductsContent" class="space-y-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
           <div>
@@ -91,7 +93,7 @@
             + Tambah Barang Baru
           </button>
         </div>
-        <!-- Data Table (sama dengan versi awal) -->
+        
         <div class="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse min-w-[700px]">
@@ -110,7 +112,7 @@
         <div id="productMobileList" class="md:hidden space-y-3"></div>
       </div>
 
-      <!-- Tab Input SO -->
+      <!-- TAB 2: INPUT STOCK OPNAME -->
       <div id="tabOpnameContent" class="space-y-4 hidden">
         <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b border-slate-100">
@@ -120,49 +122,47 @@
             </div>
             <button type="button" onclick="openScannerModal()" 
               class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5 shadow-sm">
-              <span>Scan Barcode</span>
+              <span>Scan Barcode Kamera</span>
             </button>
           </div>
 
-          <form id="opnameForm" onsubmit="handleSaveOpname(event)" class="space-y-4">
+          <form id="opnameForm" onsubmit="event.preventDefault(); handleSaveOpname(event);" class="space-y-4">
             
-            <!-- Tambahan Pilihan Metode SO -->
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-2">
-              <label class="block text-xs font-bold text-slate-700 mb-2">Metode Input Stock Opname:</label>
-              <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                <label class="inline-flex items-center cursor-pointer">
-                  <input type="radio" name="soMethod" value="otomatis" checked onchange="toggleSOMethod()" class="form-radio text-blue-600 focus:ring-blue-500 w-4 h-4">
-                  <span class="ml-2 text-sm font-semibold text-slate-700">Dari Master Barang (Otomatis)</span>
-                </label>
-                <label class="inline-flex items-center cursor-pointer">
-                  <input type="radio" name="soMethod" value="manual" onchange="toggleSOMethod()" class="form-radio text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                  <span class="ml-2 text-sm font-semibold text-slate-700">Barang Baru (Manual)</span>
-                </label>
+            <!-- PENGATURAN MODE SCAN -->
+            <div class="bg-indigo-50 p-3 sm:p-4 rounded-xl border border-indigo-200 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-inner">
+              <div>
+                <label class="block text-xs font-bold text-indigo-800 mb-2">Mode Scan & Input Qty:</label>
+                <div class="flex space-x-4">
+                  <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="scanMode" value="manual" checked onchange="toggleScanMode()" class="form-radio text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                    <span class="ml-2 text-sm font-semibold text-indigo-700">Manual (Ketik Qty)</span>
+                  </label>
+                  <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="scanMode" value="otomatis" onchange="toggleScanMode()" class="form-radio text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                    <span class="ml-2 text-sm font-bold text-indigo-700">Otomatis (Langsung Simpan)</span>
+                  </label>
+                </div>
+              </div>
+              <div id="autoQtyContainer" class="hidden flex-row items-center space-x-2 bg-white p-2 rounded-lg border border-indigo-100">
+                 <label class="text-xs font-bold text-indigo-800">Set Qty Otomatis:</label>
+                 <input type="number" id="autoQtyValue" value="1" min="1" class="w-16 px-2 py-1.5 border border-indigo-300 rounded-lg text-sm text-center font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
               </div>
             </div>
-
+            
             <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 items-start">
               <div class="sm:col-span-1">
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Judul / Sesi SO</label>
                 <input type="text" id="opnameJudulSesi" required placeholder="Cth: 1" class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
               </div>
               <div class="sm:col-span-5 relative">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Barang / Input SKU Baru</label>
-                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" placeholder="Ketik kombinasi nama / SKU..." class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
-                <div id="searchDropdownResults" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50 hidden"></div>
-              </div>
-            </div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Judul / Sesi SO</label>
-                <input type="text" id="opnameJudulSesi" required placeholder="Cth: 1" class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
-              </div>
-              <div class="sm:col-span-5 relative">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Barang (SKU/Nama)</label>
-                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" onblur="handleManualSkuInput()" placeholder="Ketik kombinasi nama / SKU..." class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Barang / Barcode Scanner</label>
+                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" onblur="handleManualSkuInput()" placeholder="Ketik nama/SKU, atau gunakan Scanner Tembak (USB)..." class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
                 <div id="searchDropdownResults" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50 hidden"></div>
               </div>
             </div>
 
             <input type="hidden" id="selectedProductIndex" value=""><input type="hidden" id="isManualEntry" value="false">
+            
             <div class="grid grid-cols-1 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
                 <span class="block text-[11px] font-semibold text-slate-500 mb-1">Nama Barang</span>
@@ -171,7 +171,7 @@
               <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200">
                 <div>
                   <span class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1">Stok Sistem</span>
-                  <input type="number" id="displayStokSistem" readonly value="0" min="0" oninput="calculateVariance()" class="w-full px-2 py-2 border border-slate-300 bg-white rounded-lg text-sm font-bold text-blue-600 focus:outline-none">
+                  <input type="number" id="displayStokSistem" readonly value="0" class="w-full px-2 py-2 border border-slate-300 bg-white rounded-lg text-sm font-bold text-blue-600 focus:outline-none">
                 </div>
                 <div>
                   <span class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1">Harga (Rp)</span>
@@ -185,8 +185,8 @@
             </div>
             
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Stok Fisik</label>
-              <input type="number" id="opnameStokFisik" required min="0" oninput="calculateVariance()" placeholder="Hasil hitung fisik..." class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Stok Fisik (Hasil Hitung)</label>
+              <input type="number" id="opnameStokFisik" required min="0" oninput="calculateVariance()" placeholder="Masukkan hasil hitung fisik..." class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
             </div>
             <div id="varianceResultBox" class="hidden p-3 rounded-xl text-xs sm:text-sm font-medium text-center">Selisih: <span id="varianceText">0</span></div>
             <div>
@@ -197,7 +197,7 @@
           </form>
         </div>
         
-        <!-- Riwayat SO Table -->
+        <!-- Riwayat SO -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-4">
           <h4 class="font-bold text-slate-800 text-base mb-3">Riwayat Hasil Opname</h4>
           <div class="hidden md:block overflow-x-auto">
@@ -220,6 +220,8 @@
     </main>
   </div>
 
+  <!-- ==================== MODALS ==================== -->
+  
   <!-- Modal Logo -->
   <div id="logoModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 border border-slate-200">
@@ -227,7 +229,7 @@
         <h3 class="font-bold text-slate-800 text-base">Pengaturan Logo App</h3>
         <button onclick="closeLogoModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
       </div>
-      <form id="logoForm" onsubmit="handleSaveLogo(event)" class="space-y-4">
+      <form id="logoForm" onsubmit="event.preventDefault(); handleSaveLogo(event);" class="space-y-4">
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Opsi 1: Upload File Gambar</label>
             <input type="file" id="logoFileInput" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
@@ -244,7 +246,7 @@
     </div>
   </div>
   
-  <!-- Add Modal dan Scanner Modal (disembunyikan kode untuk menghemat ruang, gunakan kode HTML aslinya) -->
+  <!-- Modal Scanner Kamera -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 border border-slate-200">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -256,13 +258,14 @@
     </div>
   </div>
 
+  <!-- Modal Add Product -->
   <div id="addModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 class="font-bold text-slate-800 text-base sm:text-lg">Tambah Barang Baru</h3>
         <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
       </div>
-      <form id="addProductForm" onsubmit="handleSaveProduct(event)" class="space-y-3">
+      <form id="addProductForm" onsubmit="event.preventDefault(); handleSaveProduct(event);" class="space-y-3">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label class="block text-xs font-semibold text-slate-600 mb-1">Kode SKU</label><input type="text" id="addSku" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
           <div><label class="block text-xs font-semibold text-slate-600 mb-1">Kategori</label><input type="text" id="addKategori" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
@@ -270,19 +273,20 @@
         <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Barang</label><input type="text" id="addNama" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label class="block text-xs font-semibold text-slate-600 mb-1">Stok Awal</label><input type="number" id="addStok" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Harga</label><input type="number" id="addHarga" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Harga (Rp)</label><input type="number" id="addHarga" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
         </div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Supplier</label><input type="text" id="addSupplier" required class="w-full px-3 py-2 border rounded-xl text-sm"></div>
-        <div class="flex justify-end space-x-2 pt-3 border-t"><button type="submit" id="saveProductBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm">Simpan</button></div>
+        <div class="flex justify-end space-x-2 pt-3 border-t"><button type="submit" id="saveProductBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm">Simpan Barang</button></div>
       </form>
     </div>
   </div>
 
+  <!-- ==================== SCRIPT JAVASCRIPT ==================== -->
   <script>
-    // 1. MASUKKAN LINK GAS /exec ANDA DI SINI
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwXuWWTa3MTCEDh2_qGzlRHbrUabzPxyRi3LAF5qyuFlZQ5-9qvqLDSiR8Wu-bgTIA2xw/exec"; 
+    // 1. MASUKKAN LINK URL WEB APP GAS ANDA DI BAWAH INI (Harus diapit tanda kutip " ")
+    const GAS_URL = "MASUKKAN_LINK_URL_EXEC_ANDA_DISINI"; 
 
-    // Fungsi komunikasi API (Pengganti google.script.run)
+    // Fungsi fetch API ke Google Apps Script
     function callAPI(action, params, onSuccess, onFailure) {
       fetch(GAS_URL, {
         method: 'POST',
@@ -302,93 +306,106 @@
       });
     }
 
+    // Variabel Global
     let globalProducts = [];
     let currentUserNama = '';
     let html5QrCode = null;
     let isScannerRunning = false;
 
+    // Saat Aplikasi Pertama Dimuat
     window.onload = function() {
-      // Panggil konfigurasi logo
+      // Load Logo
       callAPI('getAppConfig', {}, function(config) {
         if(config && config.logoUrl) updateUICustomLogo(config.logoUrl);
-      }, function(err){ console.error("Logo gagal dimuat", err); });
+      }, function(err){ console.error("Gagal memuat logo:", err); });
 
+      // Cek Sesi Login
       const savedUser = localStorage.getItem('so_user_nama');
       const savedRole = localStorage.getItem('so_user_role');
       if (savedUser && savedRole) {
         masukDashboard(savedUser, savedRole);
       }
+
+      // Deteksi Scanner Barcode USB (Tombol Enter)
+      const searchInput = document.getElementById('productSearchInput');
+      if(searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault(); 
+            const val = this.value.trim().toLowerCase();
+            if(val === '') return;
+            
+            const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === val);
+            if (idx !== -1) {
+              selectProductByIndex(idx); 
+            } else {
+              alert("SKU Barang tidak ditemukan di Master Data! Silakan input manual.");
+              enableManualEntry(val);
+            }
+          }
+        });
+      }
     };
 
+    // Fungsi UI Logo
     function updateUICustomLogo(url) {
       if(!url) return;
       document.getElementById('defaultLoginLogo').classList.add('hidden');
       document.getElementById('defaultHeaderLogo').classList.add('hidden');
-      
       const lgLogin = document.getElementById('customLoginLogo');
       const lgHead = document.getElementById('customHeaderLogo');
-      
       lgLogin.src = url; lgHead.src = url;
       lgLogin.classList.remove('hidden'); lgHead.classList.remove('hidden');
     }
 
+    function openLogoModal() { document.getElementById('logoModal').classList.remove('hidden'); document.getElementById('logoModal').classList.add('flex'); }
+    function closeLogoModal() { document.getElementById('logoModal').classList.add('hidden'); document.getElementById('logoModal').classList.remove('flex'); }
+
+    function handleSaveLogo(e) {
+      if(e) e.preventDefault();
+      const urlInput = document.getElementById('logoUrlInput').value;
+      const fileInput = document.getElementById('logoFileInput');
+      const btn = document.getElementById('saveLogoBtn');
+      btn.disabled = true; btn.textContent = "Menyimpan...";
+
+      const successFn = function(res) {
+          btn.disabled = false; btn.textContent = "Simpan Logo";
+          if (res.status === 'success') {
+              updateUICustomLogo(res.logoUrl);
+              closeLogoModal();
+          } else alert(res.message);
+      };
+      const errorFn = function(err) {
+          btn.disabled = false; btn.textContent = "Simpan Logo";
+          alert("Gagal: " + err.message);
+      };
+
+      if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+              callAPI('updateLogoConfig', { linkUrl: "", base64Data: evt.target.result, filename: file.name }, successFn, errorFn);
+          };
+          reader.readAsDataURL(file);
+      } else {
+          callAPI('updateLogoConfig', { linkUrl: urlInput, base64Data: null, filename: null }, successFn, errorFn);
+      }
+    }
+
+    // Fungsi Auth & Navigasi
     function applyRoleRestrictions(role) {
       const roleStr = role.toLowerCase();
       const btnProd = document.getElementById('tabProductsBtn');
       const btnSetLogo = document.getElementById('btnSettingLogo');
       
-      if (roleStr === 'user') {
+      if (roleStr === 'user' || roleStr === 'staff') {
         btnProd.classList.add('hidden');
         if(btnSetLogo) btnSetLogo.classList.add('hidden');
         switchTab('opname'); 
-      } else {
+      } else { // admin / owner
         btnProd.classList.remove('hidden');
         if(btnSetLogo) btnSetLogo.classList.remove('hidden');
         switchTab('products');
-      }
-    }
-
-    function toggleSOMethod() {
-      const method = document.querySelector('input[name="soMethod"]:checked').value;
-      const searchInput = document.getElementById('productSearchInput');
-      const nameInput = document.getElementById('displaySelectedName');
-      const stokInput = document.getElementById('displayStokSistem');
-      const hrgInput = document.getElementById('displayHargaSatuan');
-      const supInput = document.getElementById('displaySupplier');
-      const isManual = document.getElementById('isManualEntry');
-      const dropdown = document.getElementById('searchDropdownResults');
-
-      // Reset Form
-      searchInput.value = '';
-      nameInput.value = '';
-      stokInput.value = '0';
-      hrgInput.value = 'Rp 0';
-      supInput.value = '-';
-      document.getElementById('opnameStokFisik').value = '';
-      document.getElementById('varianceResultBox').classList.add('hidden');
-      document.getElementById('selectedProductIndex').value = '';
-      dropdown.classList.add('hidden');
-
-      if (method === 'manual') {
-        // Mode Manual: Buka kunci semua input
-        isManual.value = "true";
-        searchInput.placeholder = "Ketik SKU Manual (Opsional)...";
-        nameInput.readOnly = false; nameInput.placeholder = "Ketik Nama Barang Baru...";
-        stokInput.readOnly = false;
-        hrgInput.readOnly = false; hrgInput.placeholder = "0";
-        supInput.readOnly = false; supInput.placeholder = "Nama Supplier Baru...";
-        
-        nameInput.classList.remove('bg-white'); nameInput.classList.add('bg-emerald-50', 'border-emerald-300');
-      } else {
-        // Mode Otomatis: Kunci kembali input
-        isManual.value = "false";
-        searchInput.placeholder = "Ketik kombinasi nama / SKU untuk mencari...";
-        nameInput.readOnly = true; nameInput.placeholder = "Belum ada barang dipilih...";
-        stokInput.readOnly = true;
-        hrgInput.readOnly = true; hrgInput.value = "Rp 0";
-        supInput.readOnly = true; supInput.value = "-";
-        
-        nameInput.classList.add('bg-white'); nameInput.classList.remove('bg-emerald-50', 'border-emerald-300');
       }
     }
 
@@ -396,7 +413,6 @@
         currentUserNama = nama;
         document.getElementById('userNameText').textContent = nama;
         document.getElementById('userRoleText').textContent = role;
-        
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('dashboardSection').classList.remove('hidden');
         
@@ -406,7 +422,7 @@
     }
 
     function handleLogin(event) {
-      event.preventDefault();
+      if(event) event.preventDefault();
       const u = document.getElementById('username').value;
       const p = document.getElementById('password').value;
       const btn = document.getElementById('submitBtn');
@@ -460,55 +476,12 @@
       }
     }
 
-    // Modal & Action Logo
-    function openLogoModal() {
-        document.getElementById('logoModal').classList.remove('hidden');
-        document.getElementById('logoModal').classList.add('flex');
-    }
-    
-    function closeLogoModal() {
-        document.getElementById('logoModal').classList.add('hidden');
-        document.getElementById('logoModal').classList.remove('flex');
-    }
-
-    function handleSaveLogo(e) {
-        e.preventDefault();
-        const urlInput = document.getElementById('logoUrlInput').value;
-        const fileInput = document.getElementById('logoFileInput');
-        const btn = document.getElementById('saveLogoBtn');
-        btn.disabled = true; btn.textContent = "Menyimpan...";
-
-        const successFn = function(res) {
-            btn.disabled = false; btn.textContent = "Simpan Logo";
-            if (res.status === 'success') {
-                updateUICustomLogo(res.logoUrl);
-                closeLogoModal();
-            } else alert(res.message);
-        };
-        const errorFn = function(err) {
-            btn.disabled = false; btn.textContent = "Simpan Logo";
-            alert("Gagal: " + err.message);
-        };
-
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const base64 = evt.target.result;
-                callAPI('updateLogoConfig', { linkUrl: "", base64Data: base64, filename: file.name }, successFn, errorFn);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            callAPI('updateLogoConfig', { linkUrl: urlInput, base64Data: null, filename: null }, successFn, errorFn);
-        }
-    }
-
-    // Fungsi Data & SO
+    // Fungsi Data Master Barang
     function loadProducts() {
       const tbody = document.getElementById('productTableBody');
       const mobileList = document.getElementById('productMobileList');
       tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Memuat data barang...</td></tr>`;
-      mobileList.innerHTML = `<div class="p-4 bg-white rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">Memuat data barang...</div>`;
+      mobileList.innerHTML = `<div class="p-4 bg-white rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">Memuat data...</div>`;
 
       callAPI('getProducts', {}, 
         function(products) {
@@ -533,19 +506,133 @@
       );
     }
 
+    function handleSaveProduct(e) {
+      if(e) e.preventDefault();
+      const saveBtn = document.getElementById('saveProductBtn');
+      saveBtn.disabled = true; saveBtn.textContent = 'Menyimpan...';
+
+      const data = {
+        sku: document.getElementById('addSku').value, nama: document.getElementById('addNama').value,
+        kategori: document.getElementById('addKategori').value, stok: document.getElementById('addStok').value,
+        harga: document.getElementById('addHarga').value, supplier: document.getElementById('addSupplier').value
+      };
+
+      callAPI('addProduct', { productData: data }, 
+        function(res) {
+          saveBtn.disabled = false; saveBtn.textContent = 'Simpan Barang';
+          if (res.status === 'success') { closeAddModal(); loadProducts(); } else alert(res.message);
+        },
+        function(err) { saveBtn.disabled = false; saveBtn.textContent = 'Simpan Barang'; alert('Terjadi kesalahan koneksi.'); }
+      );
+    }
+
+    function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); document.getElementById('addModal').classList.add('flex'); }
+    function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); document.getElementById('addModal').classList.remove('flex'); document.getElementById('addProductForm').reset(); }
+
+    // Fungsi Scan & Input SO
+    function toggleScanMode() {
+      const mode = document.querySelector('input[name="scanMode"]:checked').value;
+      const autoQtyCont = document.getElementById('autoQtyContainer');
+      if (mode === 'otomatis') {
+        autoQtyCont.classList.remove('hidden'); autoQtyCont.classList.add('flex');
+      } else {
+        autoQtyCont.classList.add('hidden'); autoQtyCont.classList.remove('flex');
+      }
+    }
+
+    function filterProductDropdown() {
+      if (document.getElementById('isManualEntry').value === "true") return;
+      const raw = document.getElementById('productSearchInput').value.toLowerCase().trim();
+      const dp = document.getElementById('searchDropdownResults');
+      if (raw === "") { dp.classList.add('hidden'); dp.innerHTML = ""; return; }
+      
+      const kw = raw.split(/\s+/);
+      const filtered = globalProducts.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => { const t = (p.sku + " " + p.nama).toLowerCase(); return kw.every(k => t.includes(k)); });
+      
+      if (filtered.length === 0) { dp.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Data tidak ditemukan. Tekan 'Enter' untuk input manual.</div>`; dp.classList.remove('hidden'); return; }
+      
+      let html = ''; filtered.forEach(item => { html += `<div onclick="selectProductByIndex(${item.originalIndex})" class="p-3 hover:bg-slate-50 cursor-pointer border-b text-sm"><div class="font-bold">${item.sku} - ${item.nama}</div><div class="text-xs text-slate-500">Sistem: ${item.stok} | Sup: ${item.supplier || '-'}</div></div>`; });
+      dp.innerHTML = html; dp.classList.remove('hidden');
+    }
+
+    function selectProductByIndex(idx) {
+      const p = globalProducts[idx];
+      document.getElementById('selectedProductIndex').value = idx; 
+      document.getElementById('isManualEntry').value = "false";
+      
+      const search = document.getElementById('productSearchInput'); search.value = `${p.sku} - ${p.nama}`; search.blur();
+      const name = document.getElementById('displaySelectedName'); name.value = `${p.sku} - ${p.nama}`; name.readOnly = true; name.classList.add('bg-white'); name.classList.remove('bg-emerald-50');
+      const stok = document.getElementById('displayStokSistem'); stok.value = p.stok; stok.readOnly = true;
+      const hrg = document.getElementById('displayHargaSatuan'); hrg.value = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.harga || 0); hrg.readOnly = true;
+      const sup = document.getElementById('displaySupplier'); sup.value = p.supplier || '-'; sup.readOnly = true;
+      document.getElementById('searchDropdownResults').classList.add('hidden'); 
+      
+      const mode = document.querySelector('input[name="scanMode"]:checked').value;
+      if (mode === 'otomatis') {
+         const autoQty = document.getElementById('autoQtyValue').value || 1;
+         document.getElementById('opnameStokFisik').value = autoQty;
+         calculateVariance();
+         handleSaveOpname({ preventDefault: () => {} });
+      } else {
+         document.getElementById('opnameStokFisik').value = ""; 
+         document.getElementById('varianceResultBox').classList.add('hidden');
+         setTimeout(() => document.getElementById('opnameStokFisik').focus(), 100);
+      }
+    }
+
+    function handleManualSkuInput() { 
+      setTimeout(() => { 
+        const v = document.getElementById('productSearchInput').value.trim(); 
+        if (v === "") return; 
+        const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === v.toLowerCase() || `${p.sku} - ${p.nama}`.toLowerCase() === v.toLowerCase()); 
+        if (idx === -1 && document.getElementById('selectedProductIndex').value === "") { enableManualEntry(v); } 
+      }, 300); 
+    }
+
+    function enableManualEntry(sku) { 
+      document.getElementById('selectedProductIndex').value = "MANUAL"; 
+      document.getElementById('isManualEntry').value = "true"; 
+      document.getElementById('productSearchInput').value = sku; 
+      
+      const name = document.getElementById('displaySelectedName'); name.value = ""; name.readOnly = false; name.placeholder = "Ketik nama barang baru..."; name.classList.remove('bg-white'); name.classList.add('bg-emerald-50');
+      const stok = document.getElementById('displayStokSistem'); stok.value = 0; stok.readOnly = false; 
+      const hrg = document.getElementById('displayHargaSatuan'); hrg.value = ""; hrg.readOnly = false; hrg.placeholder = "0"; 
+      const sup = document.getElementById('displaySupplier'); sup.value = ""; sup.readOnly = false; sup.placeholder = "Supplier..."; 
+      
+      document.getElementById('searchDropdownResults').classList.add('hidden'); 
+      document.getElementById('opnameStokFisik').value = ""; 
+      document.getElementById('varianceResultBox').classList.add('hidden'); 
+      
+      setTimeout(() => name.focus(), 100);
+    }
+
+    function calculateVariance() {
+      const stokSistem = Number(document.getElementById('displayStokSistem').value) || 0;
+      const stokFisikVal = document.getElementById('opnameStokFisik').value;
+      const box = document.getElementById('varianceResultBox'); const text = document.getElementById('varianceText');
+      if (stokFisikVal === "") { box.classList.add('hidden'); return; }
+      
+      const selisih = Number(stokFisikVal) - stokSistem;
+      box.classList.remove('hidden');
+      if (selisih === 0) { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-emerald-50 text-emerald-700 border border-emerald-200'; text.textContent = '0 (Sesuai)'; } 
+      else if (selisih > 0) { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-blue-50 text-blue-700 border border-blue-200'; text.textContent = `+${selisih} (Lebih)`; } 
+      else { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-rose-50 text-rose-700 border border-rose-200'; text.textContent = `${selisih} (Kurang)`; }
+    }
+
     function handleSaveOpname(event) {
-      event.preventDefault();
+      if(event) event.preventDefault();
       const idx = document.getElementById('selectedProductIndex').value;
-      if (idx === "") { alert("Silakan pilih barang terlebih dahulu."); return; }
+      const isManual = document.getElementById('isManualEntry').value === "true";
+      if (idx === "" && !isManual) { alert("Pilih barang terlebih dahulu."); return; }
 
       const payload = {
-        judulSesi: document.getElementById('opnameJudulSesi').value,
-        sku: document.getElementById('isManualEntry').value === "true" ? (document.getElementById('productSearchInput').value || "MANUAL") : globalProducts[idx].sku,
-        namaBarang: document.getElementById('isManualEntry').value === "true" ? (document.getElementById('displaySelectedName').value || "Barang Baru") : globalProducts[idx].nama,
-        stokSistem: document.getElementById('displayStokSistem').value,
+        judulSesi: document.getElementById('opnameJudulSesi').value || "1",
+        sku: isManual ? (document.getElementById('productSearchInput').value || "MANUAL") : globalProducts[idx].sku,
+        namaBarang: isManual ? (document.getElementById('displaySelectedName').value || "Barang Baru") : globalProducts[idx].nama,
+        stokSistem: document.getElementById('displayStokSistem').value || 0,
         stokFisik: document.getElementById('opnameStokFisik').value,
-        harga: document.getElementById('isManualEntry').value === "true" ? (document.getElementById('displayHargaSatuan').value.replace(/[^0-9]/g, '') || 0) : globalProducts[idx].harga,
-        supplier: document.getElementById('isManualEntry').value === "true" ? (document.getElementById('displaySupplier').value || "-") : (globalProducts[idx].supplier || "-"),
+        harga: isManual ? (document.getElementById('displayHargaSatuan').value.replace(/[^0-9]/g, '') || 0) : globalProducts[idx].harga,
+        supplier: isManual ? (document.getElementById('displaySupplier').value || "-") : (globalProducts[idx].supplier || "-"),
         petugas: currentUserNama,
         keterangan: document.getElementById('opnameKeterangan').value
       };
@@ -565,13 +652,17 @@
             document.getElementById('displayStokSistem').value = "0";
             document.getElementById('displayHargaSatuan').value = "Rp 0";
             document.getElementById('displaySupplier').value = "-";
+            document.getElementById('displaySelectedName').classList.add('bg-white');
+            document.getElementById('displaySelectedName').classList.remove('bg-emerald-50');
             document.getElementById('varianceResultBox').classList.add('hidden');
-            loadOpnameHistory(); switchTab('opname');
+            
+            loadOpnameHistory(); 
+            document.getElementById('productSearchInput').focus(); // Fokus kembali ke pencarian siap scan
           } else alert(response.message);
         },
         function(error) {
           btn.disabled = false; btn.textContent = 'Simpan Hasil Opname';
-          alert('Terjadi kesalahan koneksi.');
+          alert('Terjadi kesalahan simpan.');
         }
       );
     }
@@ -599,83 +690,27 @@
       );
     }
 
-    function handleSaveProduct(event) {
-      event.preventDefault();
-      const saveBtn = document.getElementById('saveProductBtn');
-      saveBtn.disabled = true; saveBtn.textContent = 'Menyimpan...';
-
-      const productData = {
-        sku: document.getElementById('addSku').value,
-        nama: document.getElementById('addNama').value,
-        kategori: document.getElementById('addKategori').value,
-        stok: document.getElementById('addStok').value,
-        harga: document.getElementById('addHarga').value,
-        supplier: document.getElementById('addSupplier').value
-      };
-
-      callAPI('addProduct', { productData: productData }, 
-        function(response) {
-          saveBtn.disabled = false; saveBtn.textContent = 'Simpan Barang';
-          if (response.status === 'success') {
-            closeAddModal(); loadProducts();
-          } else alert(response.message);
-        },
-        function(error) {
-          saveBtn.disabled = false; saveBtn.textContent = 'Simpan Barang';
-          alert('Terjadi kesalahan.');
-        }
-      );
+    // Fungsi Kamera Scanner HP
+    function openScannerModal() { 
+      document.getElementById('scannerModal').classList.remove('hidden'); document.getElementById('scannerModal').classList.add('flex'); 
+      setTimeout(() => { 
+        try { 
+          if (!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); } 
+          html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 220, height: 140 } }, (dText) => { 
+            const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === dText.toLowerCase().trim());
+            if (idx !== -1) { selectProductByIndex(idx); closeScannerModal(); } else { closeScannerModal(); enableManualEntry(dText); }
+          }, (err) => {}).then(() => { isScannerRunning = true; }).catch(err => { 
+            document.getElementById('scannerErrorMsg').classList.remove('hidden'); document.getElementById('scannerErrorMsg').textContent = "Kamera diblokir/tidak tersedia.";
+          }); 
+        } catch (e) {} 
+      }, 300); 
     }
-
-    // Modal Add & Interaksi Lokal (Tanpa Call API)
-    function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); document.getElementById('addModal').classList.add('flex'); }
-    function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); document.getElementById('addModal').classList.remove('flex'); document.getElementById('addProductForm').reset(); }
-    function openScannerModal() { document.getElementById('scannerModal').classList.remove('hidden'); document.getElementById('scannerModal').classList.add('flex'); setTimeout(() => { try { if (!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); } html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 220, height: 140 } }, (dText) => { selectProductBySku(dText); }, (err) => {}).then(() => { isScannerRunning = true; }).catch(err => { document.getElementById('scannerErrorMsg').classList.remove('hidden'); }); } catch (e) {} }, 300); }
-    function closeScannerModal() { const m = document.getElementById('scannerModal'); if (html5QrCode && isScannerRunning) { html5QrCode.stop().then(() => { isScannerRunning = false; html5QrCode.clear(); m.classList.add('hidden'); m.classList.remove('flex'); }).catch(e => { m.classList.add('hidden'); m.classList.remove('flex'); }); } else { m.classList.add('hidden'); m.classList.remove('flex'); } }
     
-    function filterProductDropdown() {
-      // Cegah pencarian master jika sedang mode manual
-      if (document.getElementById('isManualEntry').value === "true") return;
-
-      const raw = document.getElementById('productSearchInput').value.toLowerCase().trim();
-      const dp = document.getElementById('searchDropdownResults');
-      if (raw === "") { dp.classList.add('hidden'); dp.innerHTML = ""; return; }
-      const kw = raw.split(/\s+/);
-      const filtered = globalProducts.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => { const t = (p.sku + " " + p.nama).toLowerCase(); return kw.every(k => t.includes(k)); });
-      if (filtered.length === 0) { dp.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Data tidak ditemukan di Master</div>`; dp.classList.remove('hidden'); return; }
-      let html = ''; filtered.forEach(item => { html += `<div onclick="selectProductByIndex(${item.originalIndex})" class="p-3 hover:bg-slate-50 cursor-pointer border-b text-sm"><div class="font-bold">${item.sku} - ${item.nama}</div><div class="text-xs text-slate-500">Sistem: ${item.stok} | Sup: ${item.supplier || '-'}</div></div>`; });
-      dp.innerHTML = html; dp.classList.remove('hidden');
+    function closeScannerModal() { 
+      const m = document.getElementById('scannerModal'); 
+      if (html5QrCode && isScannerRunning) { html5QrCode.stop().then(() => { isScannerRunning = false; html5QrCode.clear(); m.classList.add('hidden'); m.classList.remove('flex'); }).catch(e => { m.classList.add('hidden'); m.classList.remove('flex'); }); } 
+      else { m.classList.add('hidden'); m.classList.remove('flex'); } 
     }
-
-    function selectProductByIndex(idx) {
-      const p = globalProducts[idx];
-      document.getElementById('selectedProductIndex').value = idx; document.getElementById('isManualEntry').value = "false";
-      document.getElementById('productSearchInput').value = `${p.sku} - ${p.nama}`;
-      const name = document.getElementById('displaySelectedName'); name.value = `${p.sku} - ${p.nama}`; name.readOnly = true;
-      const stok = document.getElementById('displayStokSistem'); stok.value = p.stok; stok.readOnly = true;
-      const hrg = document.getElementById('displayHargaSatuan'); hrg.value = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.harga || 0); hrg.readOnly = true;
-      const sup = document.getElementById('displaySupplier'); sup.value = p.supplier || '-'; sup.readOnly = true;
-      document.getElementById('searchDropdownResults').classList.add('hidden'); document.getElementById('opnameStokFisik').value = ""; document.getElementById('varianceResultBox').classList.add('hidden');
-    }
-
-    function selectProductBySku(skuCode) { const c = skuCode.toLowerCase().trim(); const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === c); if (idx !== -1) { selectProductByIndex(idx); closeScannerModal(); } else { closeScannerModal(); enableManualEntry(skuCode); } }
-    function handleManualSkuInput() { setTimeout(() => { const v = document.getElementById('productSearchInput').value.trim(); if (v === "") return; const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === v.toLowerCase() || `${p.sku} - ${p.nama}`.toLowerCase() === v.toLowerCase()); if (idx === -1 && document.getElementById('selectedProductIndex').value === "") { enableManualEntry(v); } }, 300); }
-    function enableManualEntry(sku) { document.getElementById('selectedProductIndex').value = "MANUAL"; document.getElementById('isManualEntry').value = "true"; document.getElementById('productSearchInput').value = sku; const name = document.getElementById('displaySelectedName'); name.value = ""; name.readOnly = false; name.placeholder = "Ketik nama barang..."; const stok = document.getElementById('displayStokSistem'); stok.value = 0; stok.readOnly = false; const hrg = document.getElementById('displayHargaSatuan'); hrg.value = ""; hrg.readOnly = false; hrg.placeholder = "0"; const sup = document.getElementById('displaySupplier'); sup.value = ""; sup.readOnly = false; sup.placeholder = "Supplier..."; document.getElementById('searchDropdownResults').classList.add('hidden'); document.getElementById('opnameStokFisik').value = ""; document.getElementById('varianceResultBox').classList.add('hidden'); }
-    
-    function calculateVariance() {
-      const idx = document.getElementById('selectedProductIndex').value;
-      if (idx === "") return;
-      const stokSistem = Number(document.getElementById('displayStokSistem').value) || 0;
-      const stokFisikVal = document.getElementById('opnameStokFisik').value;
-      const box = document.getElementById('varianceResultBox'); const text = document.getElementById('varianceText');
-      if (stokFisikVal === "") { box.classList.add('hidden'); return; }
-      const selisih = Number(stokFisikVal) - stokSistem;
-      box.classList.remove('hidden');
-      if (selisih === 0) { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-emerald-50 text-emerald-700'; text.textContent = '0 (Sesuai)'; } 
-      else if (selisih > 0) { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-blue-50 text-blue-700'; text.textContent = `+${selisih} (Lebih)`; } 
-      else { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-rose-50 text-rose-700'; text.textContent = `${selisih} (Kurang)`; }
-    }
-  </script>
   </script>
 </body>
 </html>
