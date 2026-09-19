@@ -20,7 +20,7 @@
         <p class="text-sm text-slate-500 mt-1">Silakan masuk menggunakan akun Anda</p>
       </div>
 
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+      <form id="loginForm" onsubmit="event.preventDefault(); handleLogin(event);" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
           <input type="text" id="username" required 
@@ -253,7 +253,6 @@
     </div>
   </div>
 
-  <script>
   <script>
     // 1. MASUKKAN LINK GAS /exec ANDA DI SINI
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwXuWWTa3MTCEDh2_qGzlRHbrUabzPxyRi3LAF5qyuFlZQ5-9qvqLDSiR8Wu-bgTIA2xw/exec"; 
