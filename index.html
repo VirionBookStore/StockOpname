@@ -93,17 +93,20 @@
               <input type="number" id="autoQtyInput" value="1" min="1" class="w-20 px-2 py-1 border border-blue-300 rounded-lg font-bold text-center bg-white">
             </div>
 
-            <!-- PENCARIAN / SKU BARANG -->
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+            <!-- PENCARIAN SKU / NAMA DENGAN DROPDOWN INTERAKTIF -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 relative">
               <div class="flex justify-between items-center">
                 <span class="text-xs font-bold text-slate-700">Pencarian Barang / ID SKU:</span>
                 <button type="button" onclick="openScannerModal('SO')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm flex items-center space-x-1">
                   <span>📷 Scan Barcode</span>
                 </button>
               </div>
-              <input type="text" id="displaySelectedName" oninput="handleManualInputSearch(this.value)" placeholder="Ketik SKU/Nama atau klik Scan..." class="w-full px-3 py-2 border border-slate-300 bg-white rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
               
-              <!-- ATRIBUT YANG BISA DIISI MANUAL JIKA BARANG TIDAK DITEMUKAN -->
+              <input type="text" id="displaySelectedName" oninput="handleSearchInput(this.value)" autocomplete="off" placeholder="Ketik SKU/Nama atau klik Scan..." class="w-full px-3 py-2 border border-slate-300 bg-white rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              
+              <!-- Menu Dropdown Hasil Pencarian -->
+              <div id="searchDropdownResults" class="absolute left-3 right-3 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-44 overflow-y-auto z-50 hidden"></div>
+              
               <div class="grid grid-cols-3 gap-1.5 pt-1 text-[11px]">
                 <div>
                   <span class="text-slate-400 block">Stok Sistem</span>
@@ -154,7 +157,7 @@
     </main>
   </div>
 
-  <!-- MODAL SCANNER KAMERA (Z-INDEX TINGGI AGAR DI ATAS MODAL TAMBAH BARANG) -->
+  <!-- MODAL SCANNER KAMERA -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm hidden items-center justify-center p-3 z-[9999]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3 border">
       <div class="flex justify-between items-center border-b pb-2">
@@ -207,7 +210,24 @@
     let isProcessingScan = false;
     let currentScannerTarget = 'SO'; 
 
-    // PENGAMAN JIKA HALAMAN TIDAK SENGAJA DITUTUP / KEMBALI
+    // FUNGSI BUNYI BEEP SAAT SCAN BERHASIL
+    function playBeepSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Frekuensi suara
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.15); // Durasi 150ms
+      } catch (e) {
+        console.log("Audio context tidak didukung browser");
+      }
+    }
+
     window.addEventListener('beforeunload', function (e) {
       e.preventDefault();
       e.returnValue = '';
@@ -337,32 +357,53 @@
       mobileList.innerHTML = htmlMobile;
     }
 
-    function handleManualInputSearch(val) {
+    // FUNGSI PENCARIAN KETIK MANUAL DENGAN DROPDOWN INTERAKTIF
+    function handleSearchInput(val) {
       const cleanVal = val.toLowerCase().trim();
-      if(cleanVal === "") {
+      const dropdown = document.getElementById('searchDropdownResults');
+      
+      if (cleanVal === "") {
+        dropdown.classList.add('hidden');
+        dropdown.innerHTML = "";
         document.getElementById('selectedProductIndex').value = "";
         document.getElementById('displayStokSistem').value = 0;
         document.getElementById('displayHargaSatuan').value = 0;
         document.getElementById('displaySupplier').value = "-";
         return;
       }
-      const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === cleanVal || p.nama.toLowerCase().includes(cleanVal));
-      if(idx !== -1) {
-        selectProductByIndex(idx);
-      } else {
-        // JIKA TIDAK DITEMUKAN DI MASTER: BERIKAN AKSES INPUT MANUAL
+
+      const filtered = globalProducts.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => {
+        return (p.sku + " " + p.nama).toLowerCase().includes(cleanVal);
+      });
+
+      if (filtered.length === 0) {
+        dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Barang tidak ada di Master (Bisa input manual)</div>`;
+        dropdown.classList.remove('hidden');
         document.getElementById('selectedProductIndex').value = "MANUAL";
         document.getElementById('isManualEntry').value = "true";
+        return;
       }
+
+      let html = '';
+      filtered.forEach(item => {
+        html += `<div onclick="selectProductByIndex(${item.originalIndex})" class="p-2.5 hover:bg-slate-50 cursor-pointer border-b text-xs transition">
+          <div class="font-bold text-slate-800">${item.sku} - ${item.nama}</div>
+          <div class="text-[10px] text-slate-500">Stok Sistem: ${item.stok} | Harga: Rp ${item.harga}</div>
+        </div>`;
+      });
+      dropdown.innerHTML = html;
+      dropdown.classList.remove('hidden');
     }
 
     function selectProductByIndex(idx) {
       const p = globalProducts[idx];
       document.getElementById('selectedProductIndex').value = idx;
       document.getElementById('isManualEntry').value = "false";
+      document.getElementById('displaySelectedName').value = `${p.sku} - ${p.nama}`;
       document.getElementById('displayStokSistem').value = p.stok;
       document.getElementById('displayHargaSatuan').value = p.harga || 0;
       document.getElementById('displaySupplier').value = p.supplier || '-';
+      document.getElementById('searchDropdownResults').classList.add('hidden');
       document.getElementById('varianceResultBox').classList.add('hidden');
 
       const mode = document.getElementById('soModeSelect').value;
@@ -376,6 +417,7 @@
     }
 
     function processScannedCode(code) {
+      playBeepSound(); // Bunyi tanda scan berhasil
       const cleanCode = code.toLowerCase().trim();
       
       if (currentScannerTarget === 'ADD_SKU') {
@@ -453,7 +495,7 @@
     function handleSaveOpname(event) {
       if(event) event.preventDefault();
       const idx = document.getElementById('selectedProductIndex').value;
-      if (idx === "") { alert("Silakan isi atau scan barang terlebih dahulu!"); return; }
+      if (idx === "") { alert("Silakan pilih atau scan barang terlebih dahulu!"); return; }
 
       const isManual = document.getElementById('isManualEntry').value === "true";
       let payload = {
