@@ -111,7 +111,7 @@
 
           <form id="opnameForm" onsubmit="event.preventDefault(); handleSaveOpname(event);" class="space-y-4">
             
-            <!-- Baris 1: Sesi SO, Mode Scan, & Set Qty (Dioptimalkan agar pas di HP) -->
+            <!-- Baris 1: Sesi SO, Mode Scan, & Set Qty -->
             <div class="grid grid-cols-12 gap-2 p-3 bg-indigo-50 border border-indigo-100 rounded-xl shadow-inner items-end">
               <div class="col-span-4 sm:col-span-4">
                 <label class="block text-[11px] font-bold text-indigo-800 mb-1">Sesi SO</label>
@@ -203,10 +203,10 @@
       </div>
     </main>
 
-    <!-- Navigasi Bawah Terkunci (Sticky Bottom Tabs) -->
+    <!-- Navigasi Bawah Terkunci -->
     <nav id="bottomNavBar" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 px-4 z-50 flex justify-center space-x-2 sm:space-x-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
       <button onclick="switchTab('products')" id="tabProductsBtn" 
-        class="flex-1 max-w-[200px] px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap">
+        class="flex-1 max-w-[200px] px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap">
         📦 Master Barang
       </button>
       <button onclick="switchTab('opname')" id="tabOpnameBtn" 
@@ -241,14 +241,16 @@
     </div>
   </div>
   
+  <!-- Modal Scanner Kamera Dioptimalkan -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 border border-slate-200">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 class="font-bold text-slate-800 text-base">Scan Barcode Kamera</h3>
         <button type="button" onclick="closeScannerModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl px-2">&times;</button>
       </div>
-      <div id="reader" class="w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-900 min-h-[240px]"></div>
+      <div id="reader" class="w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-900 min-h-[260px]"></div>
       <div id="scannerErrorMsg" class="hidden text-xs text-rose-600 bg-rose-50 p-2 rounded-lg text-center font-medium"></div>
+      <button type="button" onclick="closeScannerModal()" class="w-full px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition">Tutup</button>
     </div>
   </div>
 
@@ -276,7 +278,7 @@
 
   <!-- ==================== SCRIPT JAVASCRIPT ==================== -->
   <script>
-    // 1. MASUKKAN LINK URL WEB APP GAS ANDA DI BAWAH INI (Harus diapit tanda kutip " ")
+    // 1. MASUKKAN LINK URL WEB APP GAS ANDA DI BAWAH INI
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwXuWWTa3MTCEDh2_qGzlRHbrUabzPxyRi3LAF5qyuFlZQ5-9qvqLDSiR8Wu-bgTIA2xw/exec"; 
 
     function callAPI(action, params, onSuccess, onFailure) {
@@ -463,7 +465,7 @@
         btnProd.className = 'flex-1 max-w-[200px] px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap';
         contProd.classList.remove('hidden'); contOp.classList.add('hidden');
       } else {
-        btnOp.className = 'flex-1 max-w-[200px] px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap';
+        btnOp.className = 'flex-1 max-w-[200px] px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
         contOp.classList.remove('hidden'); contProd.classList.add('hidden');
       }
 
@@ -694,25 +696,68 @@
       );
     }
 
+    // Pemindai Kamera Dioptimalkan Agar Lebih Sensitif & Cepat
     function openScannerModal() { 
-      document.getElementById('scannerModal').classList.remove('hidden'); document.getElementById('scannerModal').classList.add('flex'); 
+      document.getElementById('scannerModal').classList.remove('hidden'); 
+      document.getElementById('scannerModal').classList.add('flex'); 
+      
       setTimeout(() => { 
         try { 
-          if (!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); } 
-          html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 220, height: 140 } }, (dText) => { 
-            const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === dText.toLowerCase().trim());
-            if (idx !== -1) { selectProductByIndex(idx); closeScannerModal(); } else { closeScannerModal(); enableManualEntry(dText); }
-          }, (err) => {}).then(() => { isScannerRunning = true; }).catch(err => { 
-            document.getElementById('scannerErrorMsg').classList.remove('hidden'); document.getElementById('scannerErrorMsg').textContent = "Kamera diblokir/tidak tersedia.";
+          if (!html5QrCode) { 
+            html5QrCode = new Html5Qrcode("reader"); 
+          } 
+          
+          // Konfigurasi performa tinggi untuk deteksi garis barcode sensitif
+          const config = { 
+            fps: 20, 
+            qrbox: { width: 260, height: 140 },
+            aspectRatio: 16/9
+          }; 
+
+          html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            (dText) => { 
+              const cleanText = dText.trim().toLowerCase();
+              const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === cleanText);
+              if (idx !== -1) { 
+                selectProductByIndex(idx); 
+                closeScannerModal(); 
+              } else { 
+                closeScannerModal(); 
+                enableManualEntry(dText); 
+              }
+            }, 
+            (err) => {} // Abaikan error frame kecil saat mencari fokus
+          ).then(() => { 
+            isScannerRunning = true; 
+          }).catch(err => { 
+            document.getElementById('scannerErrorMsg').classList.remove('hidden'); 
+            document.getElementById('scannerErrorMsg').textContent = "Kamera diblokir atau tidak tersedia.";
           }); 
-        } catch (e) {} 
+        } catch (e) {
+          console.error("Scanner init error:", e);
+        } 
       }, 300); 
     }
     
     function closeScannerModal() { 
       const m = document.getElementById('scannerModal'); 
-      if (html5QrCode && isScannerRunning) { html5QrCode.stop().then(() => { isScannerRunning = false; html5QrCode.clear(); m.classList.add('hidden'); m.classList.remove('flex'); }).catch(e => { m.classList.add('hidden'); m.classList.remove('flex'); }); } 
-      else { m.classList.add('hidden'); m.classList.remove('flex'); } 
+      if (html5QrCode && isScannerRunning) { 
+        html5QrCode.stop().then(() => { 
+          isScannerRunning = false; 
+          html5QrCode.clear(); 
+          m.classList.add('hidden'); 
+          m.classList.remove('flex'); 
+        }).catch(e => { 
+          isScannerRunning = false;
+          m.classList.add('hidden'); 
+          m.classList.remove('flex'); 
+        }); 
+      } else { 
+        m.classList.add('hidden'); 
+        m.classList.remove('flex'); 
+      } 
     }
   </script>
 </body>
