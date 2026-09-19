@@ -81,7 +81,6 @@
 
           <form id="opnameForm" onsubmit="event.preventDefault(); handleSaveOpname(event);" class="space-y-3">
             
-            <!-- SESI & MODE SCAN (DIKECILKAN & SEJAJAR) -->
             <div class="grid grid-cols-12 gap-2 bg-indigo-50 p-2.5 rounded-xl border border-indigo-100 items-end">
               <div class="col-span-6 sm:col-span-6">
                 <label class="block text-[11px] font-bold text-indigo-800 mb-1">Sesi SO</label>
@@ -96,13 +95,11 @@
               </div>
             </div>
 
-            <!-- QTY OTOMATIS (TERSEMBUNYI JIKA MODE OTOMATIS AKTIF, LANGSUNG SIMPAN) -->
             <div id="autoQtyContainer" class="hidden bg-blue-50 border border-blue-200 p-2.5 rounded-xl flex items-center justify-between text-xs">
               <span class="font-semibold text-blue-800">Qty Default (Otomatis Save):</span>
               <input type="number" id="autoQtyInput" value="1" min="1" class="w-20 px-2 py-1 border border-blue-300 rounded-lg font-bold text-center bg-white text-blue-700">
             </div>
 
-            <!-- PENCARIAN SKU / NAMA + IKOM KAMERA KECIL -->
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 relative">
               <div class="flex justify-between items-center">
                 <span class="text-xs font-bold text-slate-700">Pencarian Barang / ID SKU:</span>
@@ -122,7 +119,7 @@
                 </div>
                 <div>
                   <span class="text-slate-400 block">Harga (Rp)</span>
-                  <input type="number" id="displayHargaSatuan" value="0" min="0" class="w-full p-1 border rounded bg-white font-bold text-emerald-600">
+                  <input type="number" id="displayHargaSatuan" value="0" min="0" oninput="calculateVariance()" class="w-full p-1 border rounded bg-white font-bold text-emerald-600">
                 </div>
                 <div>
                   <span class="text-slate-400 block">Supplier</span>
@@ -164,7 +161,7 @@
       </div>
     </main>
 
-    <!-- NAVIGASI TAB BAWAH TERKUNCI (STICKY BOTTOM NAV) -->
+    <!-- NAVIGASI TAB BAWAH TERKUNCI -->
     <nav id="bottomNavBar" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-2.5 px-4 z-50 flex justify-center space-x-3 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
       <button onclick="switchTab('products')" id="tabProductsBtn" class="flex-1 max-w-[200px] py-2 bg-blue-600 text-white rounded-xl text-xs font-medium transition text-center shadow-sm">📦 Master Barang</button>
       <button onclick="switchTab('opname')" id="tabOpnameBtn" class="flex-1 max-w-[200px] py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition text-center">📝 Input SO</button>
@@ -195,14 +192,15 @@
     </div>
   </div>
 
-  <!-- MODAL SCANNER KAMERA (ACUAN KODE LANCAR) -->
+  <!-- MODAL SCANNER KAMERA YANG DISESUAIKAN AGAR SANGAT SENSITIF -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-sm hidden items-center justify-center p-3 z-[9999]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3 border">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 id="scannerTitle" class="font-bold text-slate-800 text-sm">Scan Barcode Kamera</h3>
         <button type="button" onclick="closeScannerModal()" class="text-slate-400 font-bold text-lg px-1">&times;</button>
       </div>
-      <div id="reader" class="w-full rounded-xl overflow-hidden border bg-black min-h-[240px]"></div>
+      <div id="reader" class="w-full rounded-xl overflow-hidden border bg-black min-h-[260px]"></div>
+      <p class="text-[11px] text-slate-500 text-center">Posisikan garis barcode melintang horizontal atau tegak di dalam kotak.</p>
       <div id="scannerErrorMsg" class="hidden text-xs text-rose-600 bg-rose-50 p-2 rounded text-center"></div>
       <button type="button" onclick="closeScannerModal()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Tutup Kamera</button>
     </div>
@@ -264,7 +262,6 @@
       } catch (e) {}
     }
 
-    // Proteksi data agar tidak hilang saat tidak sengaja tertutup/refresh
     window.addEventListener('beforeunload', function (e) {
       if (currentUserNama !== '') {
         e.preventDefault();
@@ -342,7 +339,7 @@
       const btnSetLogo = document.getElementById('btnSettingLogo');
       
       if (roleStr === 'user' || roleStr === 'staff') {
-        btnProd.style.display = 'none'; // Sembunyikan mutlak Master Barang untuk User
+        btnProd.style.display = 'none';
         if(btnSetLogo) btnSetLogo.style.display = 'none';
         switchTab('opname'); 
       } else {
@@ -425,7 +422,7 @@
         autoQtyContainer.classList.remove('hidden');
         inputFisik.required = false;
         document.getElementById('inputSectionManual').classList.add('hidden');
-        btnSimpan.classList.add('hidden'); // Sembunyikan tombol simpan di mode otomatis
+        btnSimpan.classList.add('hidden');
       } else {
         autoQtyContainer.classList.add('hidden');
         inputFisik.required = true;
@@ -484,7 +481,7 @@
         dropdown.classList.remove('hidden');
         document.getElementById('selectedProductIndex').value = "MANUAL";
         document.getElementById('isManualEntry').value = "true";
-        document.getElementById('saveOpnameBtn').classList.remove('hidden'); // Munculkan tombol simpan untuk manual
+        document.getElementById('saveOpnameBtn').classList.remove('hidden');
         return;
       }
 
@@ -545,7 +542,7 @@
       }
     }
 
-    // PENGATURAN KAMERA DARI KODE ACUAN YANG LANCAR
+    // PENGATURAN KAMERA DENGAN FORMAT PENGCOCOKAN BARCODE MAKSIMAL
     function openScannerModal(target = 'SO') {
       currentScannerTarget = target;
       const modal = document.getElementById('scannerModal');
@@ -558,14 +555,37 @@
 
       setTimeout(() => {
         if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 250, height: 140 } }, 
-        (decodedText) => {
-          if (isProcessingScan) return;
-          isProcessingScan = true;
-          processScannedCode(decodedText);
-          setTimeout(() => { isProcessingScan = false; }, 1200);
-        }, (err) => {}).then(() => isScannerRunning = true).catch(err => {
-          errBox.textContent = "Kamera tidak dapat diakses."; errBox.classList.remove('hidden');
+        
+        // Konfigurasi performa tinggi untuk deteksi barcode multi-format & sudut fleksibel
+        const qrConfig = { 
+          fps: 25, 
+          qrbox: { width: 280, height: 160 },
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.QR_CODE
+          ]
+        };
+
+        html5QrCode.start(
+          { facingMode: "environment" }, 
+          qrConfig, 
+          (decodedText) => {
+            if (isProcessingScan) return;
+            isProcessingScan = true;
+            processScannedCode(decodedText);
+            setTimeout(() => { isProcessingScan = false; }, 1200);
+          }, 
+          (err) => {}
+        ).then(() => {
+          isScannerRunning = true;
+        }).catch(err => {
+          errBox.textContent = "Kamera tidak dapat diakses atau diblokir izinnya."; 
+          errBox.classList.remove('hidden');
         });
       }, 300);
     }
@@ -573,10 +593,12 @@
     function closeScannerModal() {
       if (html5QrCode && isScannerRunning) {
         html5QrCode.stop().then(() => {
-          isScannerRunning = false; html5QrCode.clear();
+          isScannerRunning = false; 
+          html5QrCode.clear();
           document.getElementById('scannerModal').classList.add('hidden');
         }).catch(() => {
-          isScannerRunning = false; document.getElementById('scannerModal').classList.add('hidden');
+          isScannerRunning = false; 
+          document.getElementById('scannerModal').classList.add('hidden');
         });
       } else {
         document.getElementById('scannerModal').classList.add('hidden');
@@ -631,7 +653,6 @@
         payload.supplier = p.supplier || "-";
       }
 
-      // Reset form instan siap scan berikutnya
       document.getElementById('opnameStokFisik').value = "";
       document.getElementById('opnameKeterangan').value = "";
       document.getElementById('selectedProductIndex').value = "";
