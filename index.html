@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aplikasi Virion SO</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Menggunakan ZXing Library khusus Barcode Scanner yang sangat akurat untuk HP -->
-  <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest"></script>
+  <!-- Kembali menggunakan html5-qrcode yang stabil dan dikonfigurasi penuh -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
@@ -199,18 +199,16 @@
     </div>
   </div>
 
-  <!-- MODAL SCANNER KAMERA (MENGGUNAKAN ZXING ENGINE) -->
+  <!-- MODAL SCANNER KAMERA (MENGGUNAKAN HTML5-QRCODE YANG DIOPTIMALKAN) -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-sm hidden items-center justify-center p-3 z-[9999]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3 border">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 id="scannerTitle" class="font-bold text-slate-800 text-sm">Scan Barcode Kamera</h3>
         <button type="button" onclick="closeScannerModal()" class="text-slate-400 font-bold text-lg px-1">&times;</button>
       </div>
-      <!-- Elemen Video untuk ZXing Scanner -->
-      <div class="w-full rounded-xl overflow-hidden border bg-black relative min-h-[260px] flex items-center justify-center">
-        <video id="videoPreview" class="w-full h-full object-cover"></video>
-      </div>
-      <p class="text-[11px] text-slate-500 text-center">Arahkan kamera ke barcode produk secara tegak/mendatar.</p>
+      <!-- Kotak Kamera html5-qrcode -->
+      <div id="reader" class="w-full rounded-xl overflow-hidden border bg-black min-h-[260px]"></div>
+      <p class="text-[11px] text-slate-500 text-center">Posisikan garis barcode di tengah kotak.</p>
       <div id="scannerErrorMsg" class="hidden text-xs text-rose-600 bg-rose-50 p-2 rounded text-center"></div>
       <button type="button" onclick="closeScannerModal()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Tutup Kamera</button>
     </div>
@@ -247,12 +245,13 @@
 
   <script>
     // --- GANTI URL INI DENGAN URL WEB APP GAS ANDA (/exec) ---
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwi6-TgshaMakr_SS6OU8brLgb_gaLfJQz8o_dWZnhksUOKYNitfAN5oJvyRCsaNJ-GfA/exec"; 
+    const GAS_URL = "https://script.google.com/macros/library/d/1Po35KSxsOyuobcbhowFFag1SJJiQAGdiKwPlm-F52wHkLLGn-ff8MQOu/1"; 
 
     let globalProducts = [];
     let currentUserNama = '';
     let currentUserRole = '';
-    let codeReader = null;
+    let html5QrCode = null;
+    let isScannerRunning = false;
     let isProcessingScan = false;
     let currentScannerTarget = 'SO'; 
 
@@ -599,7 +598,7 @@
       }
     }
 
-    // SCANNER MENGGUNAKAN ZXING LIBRARY (SANGAT CEPAT DAN STABIL UNTUK BARCODE RETAIL)
+    // SCANNER MENGGUNAKAN HTML5-QRCODE DENGAN CONFIG FORMAT RETAIL LENGKAP
     function openScannerModal(target = 'SO') {
       currentScannerTarget = target;
       const modal = document.getElementById('scannerModal');
@@ -611,17 +610,38 @@
       errBox.classList.add('hidden');
 
       setTimeout(() => {
-        if (!codeReader) {
-          codeReader = new ZXing.BrowserBarcodeReader();
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("reader");
         }
         
-        codeReader.decodeFromVideoDevice(null, 'videoPreview', (result, err) => {
-          if (result) {
+        const config = {
+          fps: 20,
+          qrbox: { width: 260, height: 140 },
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.QR_CODE
+          ]
+        };
+
+        html5QrCode.start(
+          { facingMode: "environment" }, 
+          config, 
+          (decodedText) => {
             if (isProcessingScan) return;
             isProcessingScan = true;
-            processScannedCode(result.text);
+            processScannedCode(decodedText);
             setTimeout(() => { isProcessingScan = false; }, 1200);
+          }, 
+          (errorMessage) => {
+            // Error frame diabaikan agar pencarian terus berjalan mulus
           }
+        ).then(() => {
+          isScannerRunning = true;
         }).catch(err => {
           errBox.textContent = "Kamera tidak dapat diakses atau diblokir izinnya.";
           errBox.classList.remove('hidden');
@@ -630,10 +650,18 @@
     }
 
     function closeScannerModal() {
-      if (codeReader) {
-        codeReader.reset();
+      if (html5QrCode && isScannerRunning) {
+        html5QrCode.stop().then(() => {
+          isScannerRunning = false;
+          html5QrCode.clear();
+          document.getElementById('scannerModal').classList.add('hidden');
+        }).catch(() => {
+          isScannerRunning = false;
+          document.getElementById('scannerModal').classList.add('hidden');
+        });
+      } else {
+        document.getElementById('scannerModal').classList.add('hidden');
       }
-      document.getElementById('scannerModal').classList.add('hidden');
     }
 
     function calculateVariance() {
