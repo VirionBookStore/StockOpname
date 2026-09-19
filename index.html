@@ -9,6 +9,12 @@
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
+  <!-- NOTIFIKASI MELAYANG DARI ATAS -->
+  <div id="topNotification" class="fixed top-5 left-1/2 -translate-x-1/2 -translate-y-24 opacity-0 transition-all duration-300 z-[99999] bg-amber-500 text-white px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs sm:text-sm flex items-center space-x-2 border-2 border-amber-300 pointer-events-none">
+    <span>⚠️</span>
+    <span id="topNotificationText">Barang tidak ada di Master (Bisa input manual)</span>
+  </div>
+
   <!-- HALAMAN LOGIN -->
   <div id="loginSection" class="flex items-center justify-center flex-grow p-4">
     <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200">
@@ -192,7 +198,7 @@
     </div>
   </div>
 
-  <!-- MODAL SCANNER KAMERA YANG DISESUAIKAN AGAR SANGAT SENSITIF -->
+  <!-- MODAL SCANNER KAMERA -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-sm hidden items-center justify-center p-3 z-[9999]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3 border">
       <div class="flex justify-between items-center border-b pb-2">
@@ -260,6 +266,55 @@
         oscillator.start();
         oscillator.stop(audioCtx.currentTime + 0.15);
       } catch (e) {}
+    }
+
+    // Suara khusus peringatan (Nada ganda untuk notifikasi barang tidak ditemukan)
+    function playWarningSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Nada Pertama
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(400, audioCtx.currentTime);
+        gain1.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start();
+        osc1.stop(audioCtx.currentTime + 0.12);
+
+        // Nada Kedua (Lebih tinggi)
+        setTimeout(() => {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.type = 'sawtooth';
+          osc2.frequency.setValueAtTime(600, audioCtx.currentTime);
+          gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.start();
+          osc2.stop(audioCtx.currentTime + 0.18);
+        }, 130);
+      } catch (e) {}
+    }
+
+    // Fungsi menampilkan notifikasi melayang dari atas
+    function showTopNotification(message) {
+      playWarningSound();
+      const notif = document.getElementById('topNotification');
+      const textElem = document.getElementById('topNotificationText');
+      textElem.textContent = message;
+      
+      // Munculkan dari atas
+      notif.classList.remove('translate-y-24', 'opacity-0');
+      notif.classList.add('translate-y-0', 'opacity-100');
+
+      // Hilangkan otomatis setelah 2.5 detik
+      setTimeout(() => {
+        notif.classList.remove('translate-y-0', 'opacity-100');
+        notif.classList.add('-translate-y-24', 'opacity-0');
+      }, 2500);
     }
 
     window.addEventListener('beforeunload', function (e) {
@@ -479,6 +534,10 @@
       if (filtered.length === 0) {
         dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Barang tidak ada di Master (Bisa input manual)</div>`;
         dropdown.classList.remove('hidden');
+        
+        // Panggil Notifikasi Melayang dari Atas + Suara Peringatan
+        showTopNotification("Barang tidak ada di Master (Bisa input manual)");
+
         document.getElementById('selectedProductIndex').value = "MANUAL";
         document.getElementById('isManualEntry').value = "true";
         document.getElementById('saveOpnameBtn').classList.remove('hidden');
@@ -537,12 +596,15 @@
           document.getElementById('displayHargaSatuan').value = 0;
           document.getElementById('displaySupplier').value = "Manual";
           document.getElementById('saveOpnameBtn').classList.remove('hidden');
+          
+          // Panggil Notifikasi Melayang dari Atas + Suara Peringatan
+          showTopNotification("Barang tidak ada di Master (Bisa input manual)");
+
           document.getElementById('opnameStokFisik').focus();
         }
       }
     }
 
-    // PENGATURAN KAMERA DENGAN FORMAT PENGCOCOKAN BARCODE MAKSIMAL
     function openScannerModal(target = 'SO') {
       currentScannerTarget = target;
       const modal = document.getElementById('scannerModal');
@@ -556,7 +618,6 @@
       setTimeout(() => {
         if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
         
-        // Konfigurasi performa tinggi untuk deteksi barcode multi-format & sudut fleksibel
         const qrConfig = { 
           fps: 25, 
           qrbox: { width: 280, height: 160 },
