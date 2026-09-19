@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aplikasi Virion SO</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <!-- Menggunakan ZXing Library khusus Barcode Scanner yang sangat akurat untuk HP -->
+  <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest"></script>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
@@ -198,15 +199,18 @@
     </div>
   </div>
 
-  <!-- MODAL SCANNER KAMERA -->
+  <!-- MODAL SCANNER KAMERA (MENGGUNAKAN ZXING ENGINE) -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-sm hidden items-center justify-center p-3 z-[9999]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3 border">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 id="scannerTitle" class="font-bold text-slate-800 text-sm">Scan Barcode Kamera</h3>
         <button type="button" onclick="closeScannerModal()" class="text-slate-400 font-bold text-lg px-1">&times;</button>
       </div>
-      <div id="reader" class="w-full rounded-xl overflow-hidden border bg-black min-h-[260px]"></div>
-      <p class="text-[11px] text-slate-500 text-center">Posisikan garis barcode melintang horizontal atau tegak di dalam kotak.</p>
+      <!-- Elemen Video untuk ZXing Scanner -->
+      <div class="w-full rounded-xl overflow-hidden border bg-black relative min-h-[260px] flex items-center justify-center">
+        <video id="videoPreview" class="w-full h-full object-cover"></video>
+      </div>
+      <p class="text-[11px] text-slate-500 text-center">Arahkan kamera ke barcode produk secara tegak/mendatar.</p>
       <div id="scannerErrorMsg" class="hidden text-xs text-rose-600 bg-rose-50 p-2 rounded text-center"></div>
       <button type="button" onclick="closeScannerModal()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Tutup Kamera</button>
     </div>
@@ -248,8 +252,7 @@
     let globalProducts = [];
     let currentUserNama = '';
     let currentUserRole = '';
-    let html5QrCode = null;
-    let isScannerRunning = false;
+    let codeReader = null;
     let isProcessingScan = false;
     let currentScannerTarget = 'SO'; 
 
@@ -268,12 +271,9 @@
       } catch (e) {}
     }
 
-    // Suara khusus peringatan (Nada ganda untuk notifikasi barang tidak ditemukan)
     function playWarningSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Nada Pertama
         const osc1 = audioCtx.createOscillator();
         const gain1 = audioCtx.createGain();
         osc1.type = 'sawtooth';
@@ -284,7 +284,6 @@
         osc1.start();
         osc1.stop(audioCtx.currentTime + 0.12);
 
-        // Nada Kedua (Lebih tinggi)
         setTimeout(() => {
           const osc2 = audioCtx.createOscillator();
           const gain2 = audioCtx.createGain();
@@ -299,18 +298,15 @@
       } catch (e) {}
     }
 
-    // Fungsi menampilkan notifikasi melayang dari atas
     function showTopNotification(message) {
       playWarningSound();
       const notif = document.getElementById('topNotification');
       const textElem = document.getElementById('topNotificationText');
       textElem.textContent = message;
       
-      // Munculkan dari atas
       notif.classList.remove('translate-y-24', 'opacity-0');
       notif.classList.add('translate-y-0', 'opacity-100');
 
-      // Hilangkan otomatis setelah 2.5 detik
       setTimeout(() => {
         notif.classList.remove('translate-y-0', 'opacity-100');
         notif.classList.add('-translate-y-24', 'opacity-0');
@@ -532,10 +528,9 @@
       });
 
       if (filtered.length === 0) {
-        dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Barang tidak ada di Master (Bisa input manual)</div>`;
-        dropdown.classList.remove('hidden');
+        dropdown.classList.add('hidden');
+        dropdown.innerHTML = "";
         
-        // Panggil Notifikasi Melayang dari Atas + Suara Peringatan
         showTopNotification("Barang tidak ada di Master (Bisa input manual)");
 
         document.getElementById('selectedProductIndex').value = "MANUAL";
@@ -597,7 +592,6 @@
           document.getElementById('displaySupplier').value = "Manual";
           document.getElementById('saveOpnameBtn').classList.remove('hidden');
           
-          // Panggil Notifikasi Melayang dari Atas + Suara Peringatan
           showTopNotification("Barang tidak ada di Master (Bisa input manual)");
 
           document.getElementById('opnameStokFisik').focus();
@@ -605,6 +599,7 @@
       }
     }
 
+    // SCANNER MENGGUNAKAN ZXING LIBRARY (SANGAT CEPAT DAN STABIL UNTUK BARCODE RETAIL)
     function openScannerModal(target = 'SO') {
       currentScannerTarget = target;
       const modal = document.getElementById('scannerModal');
@@ -616,54 +611,29 @@
       errBox.classList.add('hidden');
 
       setTimeout(() => {
-        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        if (!codeReader) {
+          codeReader = new ZXing.BrowserBarcodeReader();
+        }
         
-        const qrConfig = { 
-          fps: 25, 
-          qrbox: { width: 280, height: 160 },
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.QR_CODE
-          ]
-        };
-
-        html5QrCode.start(
-          { facingMode: "environment" }, 
-          qrConfig, 
-          (decodedText) => {
+        codeReader.decodeFromVideoDevice(null, 'videoPreview', (result, err) => {
+          if (result) {
             if (isProcessingScan) return;
             isProcessingScan = true;
-            processScannedCode(decodedText);
+            processScannedCode(result.text);
             setTimeout(() => { isProcessingScan = false; }, 1200);
-          }, 
-          (err) => {}
-        ).then(() => {
-          isScannerRunning = true;
+          }
         }).catch(err => {
-          errBox.textContent = "Kamera tidak dapat diakses atau diblokir izinnya."; 
+          errBox.textContent = "Kamera tidak dapat diakses atau diblokir izinnya.";
           errBox.classList.remove('hidden');
         });
       }, 300);
     }
 
     function closeScannerModal() {
-      if (html5QrCode && isScannerRunning) {
-        html5QrCode.stop().then(() => {
-          isScannerRunning = false; 
-          html5QrCode.clear();
-          document.getElementById('scannerModal').classList.add('hidden');
-        }).catch(() => {
-          isScannerRunning = false; 
-          document.getElementById('scannerModal').classList.add('hidden');
-        });
-      } else {
-        document.getElementById('scannerModal').classList.add('hidden');
+      if (codeReader) {
+        codeReader.reset();
       }
+      document.getElementById('scannerModal').classList.add('hidden');
     }
 
     function calculateVariance() {
