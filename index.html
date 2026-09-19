@@ -44,7 +44,7 @@
   </div>
 
   <!-- ==================== DASHBOARD UTAMA ==================== -->
-  <div id="dashboardSection" class="hidden flex-grow flex flex-col pb-20"> <!-- Padding bottom for sticky nav -->
+  <div id="dashboardSection" class="hidden flex-grow flex flex-col pb-20">
     <!-- Navbar Atas -->
     <header class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm sticky top-0 z-40">
       <div class="flex items-center space-x-2.5">
@@ -111,34 +111,34 @@
 
           <form id="opnameForm" onsubmit="event.preventDefault(); handleSaveOpname(event);" class="space-y-4">
             
-            <!-- Baris 1: Sesi, Dropdown Mode Scan, Auto Qty -->
-            <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 items-end p-4 bg-indigo-50 border border-indigo-100 rounded-xl shadow-inner">
-              <div class="sm:col-span-2">
-                <label class="block text-xs font-bold text-indigo-800 mb-1">Sesi SO</label>
-                <input type="text" id="opnameJudulSesi" required placeholder="Cth: 1" class="w-full px-3 py-2.5 border border-indigo-200 rounded-xl text-sm font-semibold text-indigo-900 focus:ring-2 focus:ring-indigo-500">
+            <!-- Baris 1: Sesi SO, Mode Scan, & Set Qty (Dioptimalkan agar pas di HP) -->
+            <div class="grid grid-cols-12 gap-2 p-3 bg-indigo-50 border border-indigo-100 rounded-xl shadow-inner items-end">
+              <div class="col-span-4 sm:col-span-4">
+                <label class="block text-[11px] font-bold text-indigo-800 mb-1">Sesi SO</label>
+                <input type="text" id="opnameJudulSesi" required placeholder="Cth: 1" class="w-full px-2.5 py-2 border border-indigo-200 rounded-lg text-xs sm:text-sm font-semibold text-indigo-900 focus:ring-2 focus:ring-indigo-500 bg-white">
               </div>
               
-              <div class="sm:col-span-2">
-                <label class="block text-xs font-bold text-indigo-800 mb-1">Mode Scan</label>
-                <select id="scanModeSelect" onchange="toggleScanMode()" class="w-full px-3 py-2.5 border border-indigo-300 bg-white text-indigo-800 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm cursor-pointer">
-                  <option value="manual">Manual (Ketik Qty)</option>
-                  <option value="otomatis">Otomatis (Langsung Simpan)</option>
+              <div class="col-span-5 sm:col-span-4">
+                <label class="block text-[11px] font-bold text-indigo-800 mb-1">Mode Scan</label>
+                <select id="scanModeSelect" onchange="toggleScanMode()" class="w-full px-2.5 py-2 border border-indigo-300 bg-white text-indigo-800 rounded-lg text-xs sm:text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm cursor-pointer">
+                  <option value="manual">Manual</option>
+                  <option value="otomatis">Otomatis</option>
                 </select>
               </div>
 
-              <div class="sm:col-span-2 hidden" id="autoQtyContainer">
-                <label class="block text-xs font-bold text-indigo-800 mb-1">Set Qty Otomatis</label>
-                <input type="number" id="autoQtyValue" value="1" min="1" class="w-full px-3 py-2.5 border border-indigo-300 bg-white text-indigo-800 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 shadow-sm text-center">
+              <div class="col-span-3 sm:col-span-4 hidden" id="autoQtyContainer">
+                <label class="block text-[11px] font-bold text-indigo-800 mb-1">Qty</label>
+                <input type="number" id="autoQtyValue" value="1" min="1" class="w-full px-2 py-2 border border-indigo-300 bg-white text-indigo-800 rounded-lg text-xs sm:text-sm font-bold focus:ring-2 focus:ring-indigo-500 shadow-sm text-center">
               </div>
             </div>
             
-            <!-- Baris 2: Cari Barang + Tombol Scan -->
+            <!-- Baris 2: Cari Barang + Tombol Kamera Minimalis -->
             <div class="relative">
               <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Barang / Barcode Scanner</label>
-              <div class="flex space-x-2">
-                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" onblur="handleManualSkuInput()" placeholder="Ketik nama/SKU, atau gunakan Scanner USB..." class="flex-grow px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
-                <button type="button" onclick="openScannerModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl text-sm font-medium transition flex items-center justify-center shadow-sm whitespace-nowrap">
-                  📷 Scan Barcode
+              <div class="flex space-x-1.5">
+                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" onblur="handleManualSkuInput()" placeholder="Ketik nama/SKU atau gunakan Scanner USB..." class="flex-grow px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
+                <button type="button" onclick="openScannerModal()" title="Scan Barcode Kamera" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2.5 rounded-xl text-base font-medium transition flex items-center justify-center shadow-sm whitespace-nowrap">
+                  📷
                 </button>
               </div>
               <div id="searchDropdownResults" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50 hidden"></div>
@@ -304,17 +304,14 @@
     let html5QrCode = null;
     let isScannerRunning = false;
 
-    // ================= PROTEKSI DATA HILANG =================
-    
-    // 1. Mencegah Refresh atau Menutup Tab secara tidak sengaja
+    // Proteksi Data Hilang
     window.addEventListener('beforeunload', function (e) {
-      if (currentUserNama !== '') { // Hanya peringatkan jika sudah login
+      if (currentUserNama !== '') {
         e.preventDefault();
         e.returnValue = '';
       }
     });
 
-    // 2. Mencegah navigasi tombol Back di HP / Browser
     window.history.pushState({ noback: true }, "");
     window.addEventListener('popstate', function(event) {
       if (currentUserNama !== '') {
@@ -326,7 +323,6 @@
         }
       }
     });
-    // ========================================================
 
     window.onload = function() {
       callAPI('getAppConfig', {}, function(config) {
@@ -401,11 +397,11 @@
       const btnSetLogo = document.getElementById('btnSettingLogo');
       
       if (roleStr === 'user' || roleStr === 'staff') {
-        btnProd.style.display = 'none'; // Kunci mutlak disembunyikan
+        btnProd.style.display = 'none';
         if(btnSetLogo) btnSetLogo.style.display = 'none';
         switchTab('opname'); 
       } else {
-        btnProd.style.display = 'block'; // Tampilkan untuk admin
+        btnProd.style.display = 'block';
         if(btnSetLogo) btnSetLogo.style.display = 'block';
         switchTab('products');
       }
@@ -460,7 +456,6 @@
       const contProd = document.getElementById('tabProductsContent');
       const contOp = document.getElementById('tabOpnameContent');
 
-      // Reset style tombol navigasi
       btnProd.className = 'flex-1 max-w-[200px] px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
       btnOp.className = 'flex-1 max-w-[200px] px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
 
@@ -472,7 +467,6 @@
         contOp.classList.remove('hidden'); contProd.classList.add('hidden');
       }
 
-      // Pastikan Master Barang tetap tersembunyi bagi user setelah perpindahan kelas
       if (currentUserRole && (currentUserRole.toLowerCase() === 'user' || currentUserRole.toLowerCase() === 'staff')) {
           btnProd.style.display = 'none';
       }
@@ -537,7 +531,7 @@
       
       if (mode === 'otomatis') {
         autoQtyCont.classList.remove('hidden'); autoQtyCont.classList.add('block');
-        btnSimpan.classList.add('hidden'); // Sembunyikan tombol simpan di mode otomatis
+        btnSimpan.classList.add('hidden'); 
       } else {
         autoQtyCont.classList.add('hidden'); autoQtyCont.classList.remove('block');
         btnSimpan.classList.remove('hidden');
@@ -607,7 +601,6 @@
       document.getElementById('opnameStokFisik').value = ""; 
       document.getElementById('varianceResultBox').classList.add('hidden'); 
       
-      // Jika masuk mode manual, kita WAJIB menampilkan tombol simpan meskipun sedang mode otomatis
       document.getElementById('saveOpnameBtn').classList.remove('hidden');
       setTimeout(() => name.focus(), 100);
     }
