@@ -125,8 +125,33 @@
           </div>
 
           <form id="opnameForm" onsubmit="handleSaveOpname(event)" class="space-y-4">
+            
+            <!-- Tambahan Pilihan Metode SO -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-2">
+              <label class="block text-xs font-bold text-slate-700 mb-2">Metode Input Stock Opname:</label>
+              <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                <label class="inline-flex items-center cursor-pointer">
+                  <input type="radio" name="soMethod" value="otomatis" checked onchange="toggleSOMethod()" class="form-radio text-blue-600 focus:ring-blue-500 w-4 h-4">
+                  <span class="ml-2 text-sm font-semibold text-slate-700">Dari Master Barang (Otomatis)</span>
+                </label>
+                <label class="inline-flex items-center cursor-pointer">
+                  <input type="radio" name="soMethod" value="manual" onchange="toggleSOMethod()" class="form-radio text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                  <span class="ml-2 text-sm font-semibold text-slate-700">Barang Baru (Manual)</span>
+                </label>
+              </div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 items-start">
               <div class="sm:col-span-1">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Judul / Sesi SO</label>
+                <input type="text" id="opnameJudulSesi" required placeholder="Cth: 1" class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div class="sm:col-span-5 relative">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Barang / Input SKU Baru</label>
+                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" placeholder="Ketik kombinasi nama / SKU..." class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
+                <div id="searchDropdownResults" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50 hidden"></div>
+              </div>
+            </div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Judul / Sesi SO</label>
                 <input type="text" id="opnameJudulSesi" required placeholder="Cth: 1" class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
               </div>
@@ -320,6 +345,50 @@
         btnProd.classList.remove('hidden');
         if(btnSetLogo) btnSetLogo.classList.remove('hidden');
         switchTab('products');
+      }
+    }
+
+    function toggleSOMethod() {
+      const method = document.querySelector('input[name="soMethod"]:checked').value;
+      const searchInput = document.getElementById('productSearchInput');
+      const nameInput = document.getElementById('displaySelectedName');
+      const stokInput = document.getElementById('displayStokSistem');
+      const hrgInput = document.getElementById('displayHargaSatuan');
+      const supInput = document.getElementById('displaySupplier');
+      const isManual = document.getElementById('isManualEntry');
+      const dropdown = document.getElementById('searchDropdownResults');
+
+      // Reset Form
+      searchInput.value = '';
+      nameInput.value = '';
+      stokInput.value = '0';
+      hrgInput.value = 'Rp 0';
+      supInput.value = '-';
+      document.getElementById('opnameStokFisik').value = '';
+      document.getElementById('varianceResultBox').classList.add('hidden');
+      document.getElementById('selectedProductIndex').value = '';
+      dropdown.classList.add('hidden');
+
+      if (method === 'manual') {
+        // Mode Manual: Buka kunci semua input
+        isManual.value = "true";
+        searchInput.placeholder = "Ketik SKU Manual (Opsional)...";
+        nameInput.readOnly = false; nameInput.placeholder = "Ketik Nama Barang Baru...";
+        stokInput.readOnly = false;
+        hrgInput.readOnly = false; hrgInput.placeholder = "0";
+        supInput.readOnly = false; supInput.placeholder = "Nama Supplier Baru...";
+        
+        nameInput.classList.remove('bg-white'); nameInput.classList.add('bg-emerald-50', 'border-emerald-300');
+      } else {
+        // Mode Otomatis: Kunci kembali input
+        isManual.value = "false";
+        searchInput.placeholder = "Ketik kombinasi nama / SKU untuk mencari...";
+        nameInput.readOnly = true; nameInput.placeholder = "Belum ada barang dipilih...";
+        stokInput.readOnly = true;
+        hrgInput.readOnly = true; hrgInput.value = "Rp 0";
+        supInput.readOnly = true; supInput.value = "-";
+        
+        nameInput.classList.add('bg-white'); nameInput.classList.remove('bg-emerald-50', 'border-emerald-300');
       }
     }
 
@@ -565,12 +634,15 @@
     function closeScannerModal() { const m = document.getElementById('scannerModal'); if (html5QrCode && isScannerRunning) { html5QrCode.stop().then(() => { isScannerRunning = false; html5QrCode.clear(); m.classList.add('hidden'); m.classList.remove('flex'); }).catch(e => { m.classList.add('hidden'); m.classList.remove('flex'); }); } else { m.classList.add('hidden'); m.classList.remove('flex'); } }
     
     function filterProductDropdown() {
+      // Cegah pencarian master jika sedang mode manual
+      if (document.getElementById('isManualEntry').value === "true") return;
+
       const raw = document.getElementById('productSearchInput').value.toLowerCase().trim();
       const dp = document.getElementById('searchDropdownResults');
       if (raw === "") { dp.classList.add('hidden'); dp.innerHTML = ""; return; }
       const kw = raw.split(/\s+/);
       const filtered = globalProducts.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => { const t = (p.sku + " " + p.nama).toLowerCase(); return kw.every(k => t.includes(k)); });
-      if (filtered.length === 0) { dp.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Data tidak ada (Input manual)</div>`; dp.classList.remove('hidden'); return; }
+      if (filtered.length === 0) { dp.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Data tidak ditemukan di Master</div>`; dp.classList.remove('hidden'); return; }
       let html = ''; filtered.forEach(item => { html += `<div onclick="selectProductByIndex(${item.originalIndex})" class="p-3 hover:bg-slate-50 cursor-pointer border-b text-sm"><div class="font-bold">${item.sku} - ${item.nama}</div><div class="text-xs text-slate-500">Sistem: ${item.stok} | Sup: ${item.supplier || '-'}</div></div>`; });
       dp.innerHTML = html; dp.classList.remove('hidden');
     }
