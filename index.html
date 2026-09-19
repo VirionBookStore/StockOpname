@@ -44,8 +44,8 @@
   </div>
 
   <!-- ==================== DASHBOARD UTAMA ==================== -->
-  <div id="dashboardSection" class="hidden flex-grow flex flex-col">
-    <!-- Navbar -->
+  <div id="dashboardSection" class="hidden flex-grow flex flex-col pb-20"> <!-- Padding bottom for sticky nav -->
+    <!-- Navbar Atas -->
     <header class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm sticky top-0 z-40">
       <div class="flex items-center space-x-2.5">
         <div id="headerLogoContainer">
@@ -69,18 +69,6 @@
 
     <main class="max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 flex-grow">
       
-      <!-- Tab Navigasi -->
-      <div class="flex space-x-2 border-b border-slate-200 pb-3 overflow-x-auto" id="tabNavContainer">
-        <button onclick="switchTab('products')" id="tabProductsBtn" 
-          class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap">
-          Master Barang
-        </button>
-        <button onclick="switchTab('opname')" id="tabOpnameBtn" 
-          class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap">
-          Input Stock Opname
-        </button>
-      </div>
-
       <!-- TAB 1: MASTER BARANG -->
       <div id="tabProductsContent" class="space-y-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
@@ -115,54 +103,50 @@
       <!-- TAB 2: INPUT STOCK OPNAME -->
       <div id="tabOpnameContent" class="space-y-4 hidden">
         <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-            <div>
-              <h3 class="text-base sm:text-lg font-bold text-slate-800">Form Input Hitung Fisik</h3>
-              <p class="text-xs text-slate-500">Buat sesi SO, cari barang atau scan barcode.</p>
-            </div>
-            <button type="button" onclick="openScannerModal()" 
-              class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition flex items-center justify-center space-x-1.5 shadow-sm">
-              <span>Scan Barcode Kamera</span>
-            </button>
+          
+          <div class="mb-4 pb-3 border-b border-slate-100">
+            <h3 class="text-base sm:text-lg font-bold text-slate-800">Form Input Hitung Fisik</h3>
+            <p class="text-xs text-slate-500">Buat sesi SO dan cari/scan barang.</p>
           </div>
 
           <form id="opnameForm" onsubmit="event.preventDefault(); handleSaveOpname(event);" class="space-y-4">
             
-            <!-- PENGATURAN MODE SCAN -->
-            <div class="bg-indigo-50 p-3 sm:p-4 rounded-xl border border-indigo-200 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-inner">
-              <div>
-                <label class="block text-xs font-bold text-indigo-800 mb-2">Mode Scan & Input Qty:</label>
-                <div class="flex space-x-4">
-                  <label class="inline-flex items-center cursor-pointer">
-                    <input type="radio" name="scanMode" value="manual" checked onchange="toggleScanMode()" class="form-radio text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-                    <span class="ml-2 text-sm font-semibold text-indigo-700">Manual (Ketik Qty)</span>
-                  </label>
-                  <label class="inline-flex items-center cursor-pointer">
-                    <input type="radio" name="scanMode" value="otomatis" onchange="toggleScanMode()" class="form-radio text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-                    <span class="ml-2 text-sm font-bold text-indigo-700">Otomatis (Langsung Simpan)</span>
-                  </label>
-                </div>
+            <!-- Baris 1: Sesi, Dropdown Mode Scan, Auto Qty -->
+            <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 items-end p-4 bg-indigo-50 border border-indigo-100 rounded-xl shadow-inner">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-indigo-800 mb-1">Sesi SO</label>
+                <input type="text" id="opnameJudulSesi" required placeholder="Cth: 1" class="w-full px-3 py-2.5 border border-indigo-200 rounded-xl text-sm font-semibold text-indigo-900 focus:ring-2 focus:ring-indigo-500">
               </div>
-              <div id="autoQtyContainer" class="hidden flex-row items-center space-x-2 bg-white p-2 rounded-lg border border-indigo-100">
-                 <label class="text-xs font-bold text-indigo-800">Set Qty Otomatis:</label>
-                 <input type="number" id="autoQtyValue" value="1" min="1" class="w-16 px-2 py-1.5 border border-indigo-300 rounded-lg text-sm text-center font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-indigo-800 mb-1">Mode Scan</label>
+                <select id="scanModeSelect" onchange="toggleScanMode()" class="w-full px-3 py-2.5 border border-indigo-300 bg-white text-indigo-800 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm cursor-pointer">
+                  <option value="manual">Manual (Ketik Qty)</option>
+                  <option value="otomatis">Otomatis (Langsung Simpan)</option>
+                </select>
+              </div>
+
+              <div class="sm:col-span-2 hidden" id="autoQtyContainer">
+                <label class="block text-xs font-bold text-indigo-800 mb-1">Set Qty Otomatis</label>
+                <input type="number" id="autoQtyValue" value="1" min="1" class="w-full px-3 py-2.5 border border-indigo-300 bg-white text-indigo-800 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 shadow-sm text-center">
               </div>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 items-start">
-              <div class="sm:col-span-1">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Judul / Sesi SO</label>
-                <input type="text" id="opnameJudulSesi" required placeholder="Cth: 1" class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
+            <!-- Baris 2: Cari Barang + Tombol Scan -->
+            <div class="relative">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Barang / Barcode Scanner</label>
+              <div class="flex space-x-2">
+                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" onblur="handleManualSkuInput()" placeholder="Ketik nama/SKU, atau gunakan Scanner USB..." class="flex-grow px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
+                <button type="button" onclick="openScannerModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl text-sm font-medium transition flex items-center justify-center shadow-sm whitespace-nowrap">
+                  📷 Scan Barcode
+                </button>
               </div>
-              <div class="sm:col-span-5 relative">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Barang / Barcode Scanner</label>
-                <input type="text" id="productSearchInput" autocomplete="off" oninput="filterProductDropdown()" onblur="handleManualSkuInput()" placeholder="Ketik nama/SKU, atau gunakan Scanner Tembak (USB)..." class="w-full px-3 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
-                <div id="searchDropdownResults" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50 hidden"></div>
-              </div>
+              <div id="searchDropdownResults" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50 hidden"></div>
             </div>
 
             <input type="hidden" id="selectedProductIndex" value=""><input type="hidden" id="isManualEntry" value="false">
             
+            <!-- Kotak Informasi Barang -->
             <div class="grid grid-cols-1 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
                 <span class="block text-[11px] font-semibold text-slate-500 mb-1">Nama Barang</span>
@@ -218,11 +202,22 @@
         </div>
       </div>
     </main>
+
+    <!-- Navigasi Bawah Terkunci (Sticky Bottom Tabs) -->
+    <nav id="bottomNavBar" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 px-4 z-50 flex justify-center space-x-2 sm:space-x-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+      <button onclick="switchTab('products')" id="tabProductsBtn" 
+        class="flex-1 max-w-[200px] px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap">
+        📦 Master Barang
+      </button>
+      <button onclick="switchTab('opname')" id="tabOpnameBtn" 
+        class="flex-1 max-w-[200px] px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap">
+        📝 Input SO
+      </button>
+    </nav>
   </div>
 
   <!-- ==================== MODALS ==================== -->
   
-  <!-- Modal Logo -->
   <div id="logoModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 border border-slate-200">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -246,7 +241,6 @@
     </div>
   </div>
   
-  <!-- Modal Scanner Kamera -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 border border-slate-200">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -258,7 +252,6 @@
     </div>
   </div>
 
-  <!-- Modal Add Product -->
   <div id="addModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -286,7 +279,6 @@
     // 1. MASUKKAN LINK URL WEB APP GAS ANDA DI BAWAH INI (Harus diapit tanda kutip " ")
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwXuWWTa3MTCEDh2_qGzlRHbrUabzPxyRi3LAF5qyuFlZQ5-9qvqLDSiR8Wu-bgTIA2xw/exec"; 
 
-    // Fungsi fetch API ke Google Apps Script
     function callAPI(action, params, onSuccess, onFailure) {
       fetch(GAS_URL, {
         method: 'POST',
@@ -306,27 +298,47 @@
       });
     }
 
-    // Variabel Global
     let globalProducts = [];
     let currentUserNama = '';
+    let currentUserRole = '';
     let html5QrCode = null;
     let isScannerRunning = false;
 
-    // Saat Aplikasi Pertama Dimuat
+    // ================= PROTEKSI DATA HILANG =================
+    
+    // 1. Mencegah Refresh atau Menutup Tab secara tidak sengaja
+    window.addEventListener('beforeunload', function (e) {
+      if (currentUserNama !== '') { // Hanya peringatkan jika sudah login
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    // 2. Mencegah navigasi tombol Back di HP / Browser
+    window.history.pushState({ noback: true }, "");
+    window.addEventListener('popstate', function(event) {
+      if (currentUserNama !== '') {
+        const isConfirm = confirm("Apakah Anda yakin ingin kembali/keluar? Data SO yang belum tersimpan akan hilang.");
+        if (isConfirm) {
+           window.history.back();
+        } else {
+           window.history.pushState({ noback: true }, "");
+        }
+      }
+    });
+    // ========================================================
+
     window.onload = function() {
-      // Load Logo
       callAPI('getAppConfig', {}, function(config) {
         if(config && config.logoUrl) updateUICustomLogo(config.logoUrl);
-      }, function(err){ console.error("Gagal memuat logo:", err); });
+      }, function(err){});
 
-      // Cek Sesi Login
       const savedUser = localStorage.getItem('so_user_nama');
       const savedRole = localStorage.getItem('so_user_role');
       if (savedUser && savedRole) {
         masukDashboard(savedUser, savedRole);
       }
 
-      // Deteksi Scanner Barcode USB (Tombol Enter)
       const searchInput = document.getElementById('productSearchInput');
       if(searchInput) {
         searchInput.addEventListener('keypress', function(e) {
@@ -339,7 +351,7 @@
             if (idx !== -1) {
               selectProductByIndex(idx); 
             } else {
-              alert("SKU Barang tidak ditemukan di Master Data! Silakan input manual.");
+              alert("SKU Barang tidak ditemukan di Master Data! Mengalihkan ke mode input manual.");
               enableManualEntry(val);
             }
           }
@@ -347,7 +359,6 @@
       }
     };
 
-    // Fungsi UI Logo
     function updateUICustomLogo(url) {
       if(!url) return;
       document.getElementById('defaultLoginLogo').classList.add('hidden');
@@ -371,46 +382,38 @@
       const successFn = function(res) {
           btn.disabled = false; btn.textContent = "Simpan Logo";
           if (res.status === 'success') {
-              updateUICustomLogo(res.logoUrl);
-              closeLogoModal();
+              updateUICustomLogo(res.logoUrl); closeLogoModal();
           } else alert(res.message);
       };
-      const errorFn = function(err) {
-          btn.disabled = false; btn.textContent = "Simpan Logo";
-          alert("Gagal: " + err.message);
-      };
+      const errorFn = function(err) { btn.disabled = false; btn.textContent = "Simpan Logo"; alert("Gagal: " + err.message); };
 
       if (fileInput.files.length > 0) {
           const file = fileInput.files[0];
           const reader = new FileReader();
-          reader.onload = function(evt) {
-              callAPI('updateLogoConfig', { linkUrl: "", base64Data: evt.target.result, filename: file.name }, successFn, errorFn);
-          };
+          reader.onload = function(evt) { callAPI('updateLogoConfig', { linkUrl: "", base64Data: evt.target.result, filename: file.name }, successFn, errorFn); };
           reader.readAsDataURL(file);
-      } else {
-          callAPI('updateLogoConfig', { linkUrl: urlInput, base64Data: null, filename: null }, successFn, errorFn);
-      }
+      } else { callAPI('updateLogoConfig', { linkUrl: urlInput, base64Data: null, filename: null }, successFn, errorFn); }
     }
 
-    // Fungsi Auth & Navigasi
     function applyRoleRestrictions(role) {
       const roleStr = role.toLowerCase();
       const btnProd = document.getElementById('tabProductsBtn');
       const btnSetLogo = document.getElementById('btnSettingLogo');
       
       if (roleStr === 'user' || roleStr === 'staff') {
-        btnProd.classList.add('hidden');
-        if(btnSetLogo) btnSetLogo.classList.add('hidden');
+        btnProd.style.display = 'none'; // Kunci mutlak disembunyikan
+        if(btnSetLogo) btnSetLogo.style.display = 'none';
         switchTab('opname'); 
-      } else { // admin / owner
-        btnProd.classList.remove('hidden');
-        if(btnSetLogo) btnSetLogo.classList.remove('hidden');
+      } else {
+        btnProd.style.display = 'block'; // Tampilkan untuk admin
+        if(btnSetLogo) btnSetLogo.style.display = 'block';
         switchTab('products');
       }
     }
 
     function masukDashboard(nama, role) {
         currentUserNama = nama;
+        currentUserRole = role;
         document.getElementById('userNameText').textContent = nama;
         document.getElementById('userRoleText').textContent = role;
         document.getElementById('loginSection').classList.add('hidden');
@@ -428,35 +431,27 @@
       const btn = document.getElementById('submitBtn');
       const alertBox = document.getElementById('alertBox');
       
-      btn.disabled = true; btn.textContent = 'Memeriksa...';
-      alertBox.classList.add('hidden');
+      btn.disabled = true; btn.textContent = 'Memeriksa...'; alertBox.classList.add('hidden');
 
       callAPI('verifikasiLogin', { username: u, password: p }, 
         function(res) {
           btn.disabled = false; btn.textContent = 'Masuk';
           if (res.status === 'success') {
-            localStorage.setItem('so_user_nama', res.nama);
-            localStorage.setItem('so_user_role', res.role);
+            localStorage.setItem('so_user_nama', res.nama); localStorage.setItem('so_user_role', res.role);
             masukDashboard(res.nama, res.role);
           } else {
-            alertBox.textContent = res.message;
-            alertBox.className = 'mt-4 p-3 rounded-xl text-sm bg-rose-50 text-rose-700';
-            alertBox.classList.remove('hidden');
+            alertBox.textContent = res.message; alertBox.className = 'mt-4 p-3 rounded-xl text-sm bg-rose-50 text-rose-700'; alertBox.classList.remove('hidden');
           }
         }, 
         function(err) {
           btn.disabled = false; btn.textContent = 'Masuk';
-          alertBox.textContent = 'Gagal terhubung! Pastikan Link GAS sudah benar.';
-          alertBox.classList.remove('hidden');
+          alertBox.textContent = 'Gagal terhubung! Pastikan Link GAS sudah benar.'; alertBox.classList.remove('hidden');
         }
       );
     }
 
     function handleLogout() {
-      if (confirm("Keluar dari aplikasi?")) {
-        localStorage.clear();
-        location.reload();
-      }
+      if (confirm("Keluar dari aplikasi?")) { localStorage.clear(); location.reload(); }
     }
 
     function switchTab(tabName) {
@@ -465,18 +460,24 @@
       const contProd = document.getElementById('tabProductsContent');
       const contOp = document.getElementById('tabOpnameContent');
 
+      // Reset style tombol navigasi
+      btnProd.className = 'flex-1 max-w-[200px] px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
+      btnOp.className = 'flex-1 max-w-[200px] px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
+
       if (tabName === 'products') {
-        btnProd.className = 'px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap';
-        btnOp.className = 'px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
+        btnProd.className = 'flex-1 max-w-[200px] px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap';
         contProd.classList.remove('hidden'); contOp.classList.add('hidden');
       } else {
-        btnOp.className = 'px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
-        btnProd.className = 'px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap';
+        btnOp.className = 'flex-1 max-w-[200px] px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm transition whitespace-nowrap';
         contOp.classList.remove('hidden'); contProd.classList.add('hidden');
+      }
+
+      // Pastikan Master Barang tetap tersembunyi bagi user setelah perpindahan kelas
+      if (currentUserRole && (currentUserRole.toLowerCase() === 'user' || currentUserRole.toLowerCase() === 'staff')) {
+          btnProd.style.display = 'none';
       }
     }
 
-    // Fungsi Data Master Barang
     function loadProducts() {
       const tbody = document.getElementById('productTableBody');
       const mobileList = document.getElementById('productMobileList');
@@ -529,14 +530,17 @@
     function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); document.getElementById('addModal').classList.add('flex'); }
     function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); document.getElementById('addModal').classList.remove('flex'); document.getElementById('addProductForm').reset(); }
 
-    // Fungsi Scan & Input SO
     function toggleScanMode() {
-      const mode = document.querySelector('input[name="scanMode"]:checked').value;
+      const mode = document.getElementById('scanModeSelect').value;
       const autoQtyCont = document.getElementById('autoQtyContainer');
+      const btnSimpan = document.getElementById('saveOpnameBtn');
+      
       if (mode === 'otomatis') {
-        autoQtyCont.classList.remove('hidden'); autoQtyCont.classList.add('flex');
+        autoQtyCont.classList.remove('hidden'); autoQtyCont.classList.add('block');
+        btnSimpan.classList.add('hidden'); // Sembunyikan tombol simpan di mode otomatis
       } else {
-        autoQtyCont.classList.add('hidden'); autoQtyCont.classList.remove('flex');
+        autoQtyCont.classList.add('hidden'); autoQtyCont.classList.remove('block');
+        btnSimpan.classList.remove('hidden');
       }
     }
 
@@ -567,7 +571,7 @@
       const sup = document.getElementById('displaySupplier'); sup.value = p.supplier || '-'; sup.readOnly = true;
       document.getElementById('searchDropdownResults').classList.add('hidden'); 
       
-      const mode = document.querySelector('input[name="scanMode"]:checked').value;
+      const mode = document.getElementById('scanModeSelect').value;
       if (mode === 'otomatis') {
          const autoQty = document.getElementById('autoQtyValue').value || 1;
          document.getElementById('opnameStokFisik').value = autoQty;
@@ -603,6 +607,8 @@
       document.getElementById('opnameStokFisik').value = ""; 
       document.getElementById('varianceResultBox').classList.add('hidden'); 
       
+      // Jika masuk mode manual, kita WAJIB menampilkan tombol simpan meskipun sedang mode otomatis
+      document.getElementById('saveOpnameBtn').classList.remove('hidden');
       setTimeout(() => name.focus(), 100);
     }
 
@@ -656,8 +662,13 @@
             document.getElementById('displaySelectedName').classList.remove('bg-emerald-50');
             document.getElementById('varianceResultBox').classList.add('hidden');
             
+            const mode = document.getElementById('scanModeSelect').value;
+            if (mode === 'otomatis') {
+                document.getElementById('saveOpnameBtn').classList.add('hidden');
+            }
+
             loadOpnameHistory(); 
-            document.getElementById('productSearchInput').focus(); // Fokus kembali ke pencarian siap scan
+            document.getElementById('productSearchInput').focus(); 
           } else alert(response.message);
         },
         function(error) {
@@ -690,7 +701,6 @@
       );
     }
 
-    // Fungsi Kamera Scanner HP
     function openScannerModal() { 
       document.getElementById('scannerModal').classList.remove('hidden'); document.getElementById('scannerModal').classList.add('flex'); 
       setTimeout(() => { 
