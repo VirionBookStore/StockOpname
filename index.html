@@ -254,16 +254,40 @@
   </div>
 
   <script>
+    <script>
+    // 1. MASUKKAN LINK GAS /exec ANDA DI SINI
+    const GAS_URL = "MASUKKAN_LINK_URL_EXEC_ANDA_DISINI"; 
+
+    // Fungsi komunikasi API (Pengganti google.script.run)
+    function callAPI(action, params, onSuccess, onFailure) {
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: action, data: params })
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result && result.error) {
+          if (onFailure) onFailure(new Error(result.error));
+        } else {
+          if (onSuccess) onSuccess(result);
+        }
+      })
+      .catch(err => {
+        if (onFailure) onFailure(err);
+      });
+    }
+
     let globalProducts = [];
     let currentUserNama = '';
     let html5QrCode = null;
     let isScannerRunning = false;
 
     window.onload = function() {
-      // Load config Logo pertama kali render
-      google.script.run.withSuccessHandler(function(config) {
-        if(config.logoUrl) updateUICustomLogo(config.logoUrl);
-      }).getAppConfig();
+      // Panggil konfigurasi logo
+      callAPI('getAppConfig', {}, function(config) {
+        if(config && config.logoUrl) updateUICustomLogo(config.logoUrl);
+      }, function(err){ console.error("Logo gagal dimuat", err); });
 
       const savedUser = localStorage.getItem('so_user_nama');
       const savedRole = localStorage.getItem('so_user_role');
@@ -280,29 +304,23 @@
       const lgLogin = document.getElementById('customLoginLogo');
       const lgHead = document.getElementById('customHeaderLogo');
       
-      lgLogin.src = url;
-      lgHead.src = url;
-      
-      lgLogin.classList.remove('hidden');
-      lgHead.classList.remove('hidden');
+      lgLogin.src = url; lgHead.src = url;
+      lgLogin.classList.remove('hidden'); lgHead.classList.remove('hidden');
     }
 
-    // Role Restriction Logic
     function applyRoleRestrictions(role) {
       const roleStr = role.toLowerCase();
       const btnProd = document.getElementById('tabProductsBtn');
       const btnSetLogo = document.getElementById('btnSettingLogo');
       
       if (roleStr === 'user') {
-        // Hanya Petugas (User), Sembunyikan Master Barang & Setting
         btnProd.classList.add('hidden');
         if(btnSetLogo) btnSetLogo.classList.add('hidden');
-        switchTab('opname'); // Paksa langsung ke tab Input SO
+        switchTab('opname'); 
       } else {
-        // Admin / Owner
         btnProd.classList.remove('hidden');
         if(btnSetLogo) btnSetLogo.classList.remove('hidden');
-        switchTab('products'); // Ke tab Master
+        switchTab('products');
       }
     }
 
@@ -315,7 +333,6 @@
         document.getElementById('dashboardSection').classList.remove('hidden');
         
         applyRoleRestrictions(role);
-        
         loadProducts();
         loadOpnameHistory();
     }
@@ -330,7 +347,8 @@
       btn.disabled = true; btn.textContent = 'Memeriksa...';
       alertBox.classList.add('hidden');
 
-      google.script.run.withSuccessHandler(function(res) {
+      callAPI('verifikasiLogin', { username: u, password: p }, 
+        function(res) {
           btn.disabled = false; btn.textContent = 'Masuk';
           if (res.status === 'success') {
             localStorage.setItem('so_user_nama', res.nama);
@@ -341,11 +359,13 @@
             alertBox.className = 'mt-4 p-3 rounded-xl text-sm bg-rose-50 text-rose-700';
             alertBox.classList.remove('hidden');
           }
-        }).withFailureHandler(function(err) {
+        }, 
+        function(err) {
           btn.disabled = false; btn.textContent = 'Masuk';
-          alertBox.textContent = 'Gagal terhubung!';
+          alertBox.textContent = 'Gagal terhubung! Pastikan Link GAS sudah benar.';
           alertBox.classList.remove('hidden');
-        }).verifikasiLogin(u, p);
+        }
+      );
     }
 
     function handleLogout() {
@@ -372,7 +392,7 @@
       }
     }
 
-    // Modal Logo Logic
+    // Modal & Action Logo
     function openLogoModal() {
         document.getElementById('logoModal').classList.remove('hidden');
         document.getElementById('logoModal').classList.add('flex');
@@ -397,34 +417,194 @@
                 closeLogoModal();
             } else alert(res.message);
         };
+        const errorFn = function(err) {
+            btn.disabled = false; btn.textContent = "Simpan Logo";
+            alert("Gagal: " + err.message);
+        };
 
         if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const base64 = evt.target.result;
-                google.script.run.withSuccessHandler(successFn).updateLogoConfig("", base64, file.name);
+                callAPI('updateLogoConfig', { linkUrl: "", base64Data: base64, filename: file.name }, successFn, errorFn);
             };
             reader.readAsDataURL(file);
         } else {
-            google.script.run.withSuccessHandler(successFn).updateLogoConfig(urlInput, null, null);
+            callAPI('updateLogoConfig', { linkUrl: urlInput, base64Data: null, filename: null }, successFn, errorFn);
         }
     }
 
-    // --- (Masukkan ulang fungsi loadProducts, Scanner, Data SO aslinya di sini seperti pada versi sebelumnya) --- 
-    function loadProducts() { /* Kode asli loadProducts */ }
-    function loadOpnameHistory() { /* Kode asli loadOpnameHistory */ }
-    function handleSaveOpname(event) { /* Kode asli handleSaveOpname */ }
-    function filterProductDropdown() { /* Kode asli */ }
-    function selectProductByIndex(idx) { /* Kode asli */ }
-    function handleManualSkuInput() { /* Kode asli */ }
-    function enableManualEntry(skuCode) { /* Kode asli */ }
-    function calculateVariance() { /* Kode asli */ }
-    function openScannerModal() { /* Kode asli scanner */ }
-    function closeScannerModal() { /* Kode asli scanner */ }
-    function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); document.getElementById('addModal').classList.remove('flex'); }
+    // Fungsi Data & SO
+    function loadProducts() {
+      const tbody = document.getElementById('productTableBody');
+      const mobileList = document.getElementById('productMobileList');
+      tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Memuat data barang...</td></tr>`;
+      mobileList.innerHTML = `<div class="p-4 bg-white rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">Memuat data barang...</div>`;
+
+      callAPI('getProducts', {}, 
+        function(products) {
+          globalProducts = products;
+          if (products.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada data barang.</td></tr>`;
+            mobileList.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">Belum ada data barang.</div>`;
+            return;
+          }
+          let htmlDesktop = ''; let htmlMobile = '';
+          products.forEach(p => {
+            const fHarga = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.harga);
+            htmlDesktop += `<tr class="hover:bg-slate-50 transition"><td class="p-4 font-semibold text-slate-800">${p.sku}</td><td class="p-4">${p.nama}</td><td class="p-4"><span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium">${p.kategori}</span></td><td class="p-4 font-bold text-blue-600">${p.stok}</td><td class="p-4 font-medium text-emerald-600">${fHarga}</td><td class="p-4 text-slate-600">${p.supplier}</td></tr>`;
+            htmlMobile += `<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2"><div class="flex justify-between items-start"><div><span class="text-xs font-bold text-blue-600">${p.sku}</span><h4 class="font-bold text-slate-800 text-sm">${p.nama}</h4></div><span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-medium">${p.kategori}</span></div><div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs"><div><span class="text-slate-400">Stok:</span> <span class="font-bold text-blue-600">${p.stok}</span></div><div><span class="text-slate-400">Harga:</span> <span class="font-bold text-emerald-600">${fHarga}</span></div><div class="col-span-2"><span class="text-slate-400">Supplier:</span> <span class="font-medium text-slate-700">${p.supplier}</span></div></div></div>`;
+          });
+          tbody.innerHTML = htmlDesktop; mobileList.innerHTML = htmlMobile;
+        },
+        function(error) {
+          tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-500">Gagal memuat data</td></tr>`;
+          mobileList.innerHTML = `<div class="p-4 text-center text-rose-500 text-sm">Gagal memuat data</div>`;
+        }
+      );
+    }
+
+    function handleSaveOpname(event) {
+      event.preventDefault();
+      const idx = document.getElementById('selectedProductIndex').value;
+      if (idx === "") { alert("Silakan pilih barang terlebih dahulu."); return; }
+
+      const payload = {
+        judulSesi: document.getElementById('opnameJudulSesi').value,
+        sku: document.getElementById('isManualEntry').value === "true" ? (document.getElementById('productSearchInput').value || "MANUAL") : globalProducts[idx].sku,
+        namaBarang: document.getElementById('isManualEntry').value === "true" ? (document.getElementById('displaySelectedName').value || "Barang Baru") : globalProducts[idx].nama,
+        stokSistem: document.getElementById('displayStokSistem').value,
+        stokFisik: document.getElementById('opnameStokFisik').value,
+        harga: document.getElementById('isManualEntry').value === "true" ? (document.getElementById('displayHargaSatuan').value.replace(/[^0-9]/g, '') || 0) : globalProducts[idx].harga,
+        supplier: document.getElementById('isManualEntry').value === "true" ? (document.getElementById('displaySupplier').value || "-") : (globalProducts[idx].supplier || "-"),
+        petugas: currentUserNama,
+        keterangan: document.getElementById('opnameKeterangan').value
+      };
+
+      const btn = document.getElementById('saveOpnameBtn');
+      btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+      callAPI('saveStockOpname', { opnameData: payload }, 
+        function(response) {
+          btn.disabled = false; btn.textContent = 'Simpan Hasil Opname';
+          if (response.status === 'success') {
+            document.getElementById('opnameStokFisik').value = "";
+            document.getElementById('selectedProductIndex').value = "";
+            document.getElementById('isManualEntry').value = "false";
+            document.getElementById('productSearchInput').value = "";
+            document.getElementById('displaySelectedName').value = "";
+            document.getElementById('displayStokSistem').value = "0";
+            document.getElementById('displayHargaSatuan').value = "Rp 0";
+            document.getElementById('displaySupplier').value = "-";
+            document.getElementById('varianceResultBox').classList.add('hidden');
+            loadOpnameHistory(); switchTab('opname');
+          } else alert(response.message);
+        },
+        function(error) {
+          btn.disabled = false; btn.textContent = 'Simpan Hasil Opname';
+          alert('Terjadi kesalahan koneksi.');
+        }
+      );
+    }
+
+    function loadOpnameHistory() {
+      const tbody = document.getElementById('opnameHistoryBody');
+      const mobileList = document.getElementById('opnameHistoryMobile');
+
+      callAPI('getStockOpnameHistory', {}, 
+        function(history) {
+          if (history.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">Belum ada riwayat.</td></tr>`;
+            mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-4">Belum ada riwayat.</div>`;
+            return;
+          }
+          let htmlDesktop = ''; let htmlMobile = '';
+          history.forEach(h => {
+            let selBadge = h.selisih === 0 ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold">0</span>` : (h.selisih > 0 ? `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold">+${h.selisih}</span>` : `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold">${h.selisih}</span>`);
+            htmlDesktop += `<tr class="hover:bg-slate-50 transition"><td class="p-3 text-[11px] text-slate-500 whitespace-nowrap">${h.waktu}</td><td class="p-3 font-semibold text-blue-600">${h.judulSesi}</td><td class="p-3 font-semibold text-slate-800">${h.sku} - ${h.namaBarang}</td><td class="p-3 text-slate-600">${h.stokSistem}</td><td class="p-3 font-bold text-slate-800">${h.stokFisik}</td><td class="p-3">${selBadge}</td><td class="p-3 text-slate-600">${h.supplier || '-'}</td><td class="p-3 text-[11px] text-slate-600">${h.petugas}</td><td class="p-3 text-[11px] text-slate-500">${h.keterangan}</td></tr>`;
+            htmlMobile += `<div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1.5"><div class="flex justify-between items-center text-[11px] text-slate-400 border-b pb-1"><span>${h.waktu}</span><span class="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Sesi: ${h.judulSesi}</span></div><div class="font-bold text-slate-800 text-sm">${h.sku} - ${h.namaBarang}</div><div class="grid grid-cols-3 gap-1 py-1 text-slate-600"><div>Sistem: <span class="font-semibold">${h.stokSistem}</span></div><div>Fisik: <span class="font-bold text-slate-800">${h.stokFisik}</span></div><div>Selisih: ${selBadge}</div></div><div class="text-[11px] text-slate-500 pt-1 border-t flex justify-between"><span>Sup: <strong class="text-slate-700">${h.supplier || '-'}</strong></span><span>Oleh: ${h.petugas}</span></div></div>`;
+          });
+          tbody.innerHTML = htmlDesktop; mobileList.innerHTML = htmlMobile;
+        },
+        function(error) { console.error("History fail:", error); }
+      );
+    }
+
+    function handleSaveProduct(event) {
+      event.preventDefault();
+      const saveBtn = document.getElementById('saveProductBtn');
+      saveBtn.disabled = true; saveBtn.textContent = 'Menyimpan...';
+
+      const productData = {
+        sku: document.getElementById('addSku').value,
+        nama: document.getElementById('addNama').value,
+        kategori: document.getElementById('addKategori').value,
+        stok: document.getElementById('addStok').value,
+        harga: document.getElementById('addHarga').value,
+        supplier: document.getElementById('addSupplier').value
+      };
+
+      callAPI('addProduct', { productData: productData }, 
+        function(response) {
+          saveBtn.disabled = false; saveBtn.textContent = 'Simpan Barang';
+          if (response.status === 'success') {
+            closeAddModal(); loadProducts();
+          } else alert(response.message);
+        },
+        function(error) {
+          saveBtn.disabled = false; saveBtn.textContent = 'Simpan Barang';
+          alert('Terjadi kesalahan.');
+        }
+      );
+    }
+
+    // Modal Add & Interaksi Lokal (Tanpa Call API)
     function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); document.getElementById('addModal').classList.add('flex'); }
-    function handleSaveProduct(e) { /* Kode asli */ }
+    function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); document.getElementById('addModal').classList.remove('flex'); document.getElementById('addProductForm').reset(); }
+    function openScannerModal() { document.getElementById('scannerModal').classList.remove('hidden'); document.getElementById('scannerModal').classList.add('flex'); setTimeout(() => { try { if (!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); } html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 220, height: 140 } }, (dText) => { selectProductBySku(dText); }, (err) => {}).then(() => { isScannerRunning = true; }).catch(err => { document.getElementById('scannerErrorMsg').classList.remove('hidden'); }); } catch (e) {} }, 300); }
+    function closeScannerModal() { const m = document.getElementById('scannerModal'); if (html5QrCode && isScannerRunning) { html5QrCode.stop().then(() => { isScannerRunning = false; html5QrCode.clear(); m.classList.add('hidden'); m.classList.remove('flex'); }).catch(e => { m.classList.add('hidden'); m.classList.remove('flex'); }); } else { m.classList.add('hidden'); m.classList.remove('flex'); } }
+    
+    function filterProductDropdown() {
+      const raw = document.getElementById('productSearchInput').value.toLowerCase().trim();
+      const dp = document.getElementById('searchDropdownResults');
+      if (raw === "") { dp.classList.add('hidden'); dp.innerHTML = ""; return; }
+      const kw = raw.split(/\s+/);
+      const filtered = globalProducts.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => { const t = (p.sku + " " + p.nama).toLowerCase(); return kw.every(k => t.includes(k)); });
+      if (filtered.length === 0) { dp.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Data tidak ada (Input manual)</div>`; dp.classList.remove('hidden'); return; }
+      let html = ''; filtered.forEach(item => { html += `<div onclick="selectProductByIndex(${item.originalIndex})" class="p-3 hover:bg-slate-50 cursor-pointer border-b text-sm"><div class="font-bold">${item.sku} - ${item.nama}</div><div class="text-xs text-slate-500">Sistem: ${item.stok} | Sup: ${item.supplier || '-'}</div></div>`; });
+      dp.innerHTML = html; dp.classList.remove('hidden');
+    }
+
+    function selectProductByIndex(idx) {
+      const p = globalProducts[idx];
+      document.getElementById('selectedProductIndex').value = idx; document.getElementById('isManualEntry').value = "false";
+      document.getElementById('productSearchInput').value = `${p.sku} - ${p.nama}`;
+      const name = document.getElementById('displaySelectedName'); name.value = `${p.sku} - ${p.nama}`; name.readOnly = true;
+      const stok = document.getElementById('displayStokSistem'); stok.value = p.stok; stok.readOnly = true;
+      const hrg = document.getElementById('displayHargaSatuan'); hrg.value = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.harga || 0); hrg.readOnly = true;
+      const sup = document.getElementById('displaySupplier'); sup.value = p.supplier || '-'; sup.readOnly = true;
+      document.getElementById('searchDropdownResults').classList.add('hidden'); document.getElementById('opnameStokFisik').value = ""; document.getElementById('varianceResultBox').classList.add('hidden');
+    }
+
+    function selectProductBySku(skuCode) { const c = skuCode.toLowerCase().trim(); const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === c); if (idx !== -1) { selectProductByIndex(idx); closeScannerModal(); } else { closeScannerModal(); enableManualEntry(skuCode); } }
+    function handleManualSkuInput() { setTimeout(() => { const v = document.getElementById('productSearchInput').value.trim(); if (v === "") return; const idx = globalProducts.findIndex(p => p.sku.toLowerCase() === v.toLowerCase() || `${p.sku} - ${p.nama}`.toLowerCase() === v.toLowerCase()); if (idx === -1 && document.getElementById('selectedProductIndex').value === "") { enableManualEntry(v); } }, 300); }
+    function enableManualEntry(sku) { document.getElementById('selectedProductIndex').value = "MANUAL"; document.getElementById('isManualEntry').value = "true"; document.getElementById('productSearchInput').value = sku; const name = document.getElementById('displaySelectedName'); name.value = ""; name.readOnly = false; name.placeholder = "Ketik nama barang..."; const stok = document.getElementById('displayStokSistem'); stok.value = 0; stok.readOnly = false; const hrg = document.getElementById('displayHargaSatuan'); hrg.value = ""; hrg.readOnly = false; hrg.placeholder = "0"; const sup = document.getElementById('displaySupplier'); sup.value = ""; sup.readOnly = false; sup.placeholder = "Supplier..."; document.getElementById('searchDropdownResults').classList.add('hidden'); document.getElementById('opnameStokFisik').value = ""; document.getElementById('varianceResultBox').classList.add('hidden'); }
+    
+    function calculateVariance() {
+      const idx = document.getElementById('selectedProductIndex').value;
+      if (idx === "") return;
+      const stokSistem = Number(document.getElementById('displayStokSistem').value) || 0;
+      const stokFisikVal = document.getElementById('opnameStokFisik').value;
+      const box = document.getElementById('varianceResultBox'); const text = document.getElementById('varianceText');
+      if (stokFisikVal === "") { box.classList.add('hidden'); return; }
+      const selisih = Number(stokFisikVal) - stokSistem;
+      box.classList.remove('hidden');
+      if (selisih === 0) { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-emerald-50 text-emerald-700'; text.textContent = '0 (Sesuai)'; } 
+      else if (selisih > 0) { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-blue-50 text-blue-700'; text.textContent = `+${selisih} (Lebih)`; } 
+      else { box.className = 'p-3 rounded-xl text-sm font-medium text-center bg-rose-50 text-rose-700'; text.textContent = `${selisih} (Kurang)`; }
+    }
   </script>
+
 </body>
 </html>
