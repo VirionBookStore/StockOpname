@@ -5,12 +5,15 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.webkit.*;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
     WebView w;
     ValueCallback<Uri[]> f;
     static final int C = 1001;
+    boolean doubleBackToExitPressedOnce = false;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -20,7 +23,6 @@ public class MainActivity extends Activity {
         w = findViewById(R.id.webView);
         WebSettings s = w.getSettings();
         
-        // Pengaturan WebView agar script, DOM storage, dan fitur kamera/file berjalan lancar
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
@@ -47,7 +49,6 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Meminta izin akses kamera, lokasi, dan internet secara runtime
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             requestPermissions(new String[]{
                 Manifest.permission.CAMERA,
@@ -56,7 +57,6 @@ public class MainActivity extends Activity {
             }, 10);
         }
 
-        // Memuat halaman web dari GitHub Pages StockOpname Anda
         w.loadUrl("https://virionbookstore.github.io/StockOpname/");
     }
 
@@ -74,7 +74,22 @@ public class MainActivity extends Activity {
         if (w.canGoBack()) {
             w.goBack();
         } else {
-            super.onBackPressed();
+            if (doubleBackToExitPressedOnce) {
+                super.onBackPressed();
+                return;
+            }
+
+            this.doubleBackToExitPressedOnce = true;
+            Toast.onShowCustomToast(this, "Tekan sekali lagi untuk keluar aplikasi", Toast.LENGTH_SHORT);
+            // Alternatif Toast standar agar aman di semua versi Android:
+            Toast.makeText(this, "Tekan sekali lagi untuk keluar aplikasi", Toast.LENGTH_SHORT).show();
+
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    doubleBackToExitPressedOnce = false;
+                }
+            }, 2000); // Waktu jeda 2 detik
         }
     }
 }
