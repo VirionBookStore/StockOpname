@@ -20,6 +20,7 @@ public class MainActivity extends Activity {
         w = findViewById(R.id.webView);
         WebSettings s = w.getSettings();
         
+        // Pengaturan WebView agar script, DOM storage, dan fitur kamera/file berjalan lancar
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
@@ -46,6 +47,7 @@ public class MainActivity extends Activity {
             }
         });
 
+        // Meminta izin akses kamera, lokasi, dan internet secara runtime
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             requestPermissions(new String[]{
                 Manifest.permission.CAMERA,
@@ -54,8 +56,8 @@ public class MainActivity extends Activity {
             }, 10);
         }
 
-        // Ganti URL di bawah ini dengan link GitHub Pages repository Stock Opname Anda
-        w.loadUrl("https://virionbookstore.github.io/nama-repo-so-anda/");
+        // Memuat halaman web dari GitHub Pages StockOpname Anda
+        w.loadUrl("https://virionbookstore.github.io/StockOpname/");
     }
 
     @Override
