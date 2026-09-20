@@ -1,59 +1,81 @@
-package com.virion.stockopname;
+package com.virion.so;
 
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.webkit.GeolocationPermissions;
-import android.webkit.ValueCallback;
-import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.webkit.*;
 
 public class MainActivity extends Activity {
-    private WebView webView;
-    private ValueCallback<Uri[]> filePathCallback;
-    private static final int FILE_CHOOSER = 1001;
+    WebView w;
+    ValueCallback<Uri[]> f;
+    static final int C = 1001;
 
-    @Override protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    @Override
+    protected void onCreate(Bundle b) {
+        super.onCreate(b);
         setContentView(R.layout.activity_main);
-        webView = findViewById(R.id.webView);
-        WebSettings s = webView.getSettings();
+        
+        w = findViewById(R.id.webView);
+        WebSettings s = w.getSettings();
+        
+        // Mengaktifkan JavaScript, DOM storage, dan fitur kamera/file agar aplikasi web berjalan normal
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
-        s.setMediaPlaybackRequiresUserGesture(false);
-        s.setGeolocationEnabled(true);
-        webView.setWebViewClient(new WebViewClient());
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
-                callback.invoke(origin, true, false);
+        s.setDatabaseEnabled(true);
+        
+        w.setWebViewClient(new WebViewClient());
+        w.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onGeolocationPermissionsShowPrompt(String o, GeolocationPermissions.Callback c) {
+                c.invoke(o, true, false);
             }
-            @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
-                if (filePathCallback != null) filePathCallback.onReceiveValue(null);
-                filePathCallback = callback;
-                try { startActivityForResult(params.createIntent(), FILE_CHOOSER); return true; }
-                catch (Exception e) { filePathCallback = null; return false; }
+
+            @Override
+            public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> c, FileChooserParams q) {
+                f = c;
+                try {
+                    startActivityForResult(q.createIntent(), C);
+                    return true;
+                } catch (Exception e) {
+                    f = null;
+                    return false;
+                }
             }
         });
-        if (android.os.Build.VERSION.SDK_INT >= 23)
-            requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 10);
-        webView.loadUrl("https://raw.githubusercontent.com/VirionBookStore/StockOpname/main/index.html");
+
+        // Meminta izin akses kamera, lokasi, dan internet
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            requestPermissions(new String[]{
+                Manifest.permission.CAMERA,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            }, 10);
+        }
+
+        // PENTING: Ganti URL di bawah ini dengan link GitHub Pages dari repository Stock Opname (Virion SO) Anda
+        w.loadUrl("https://virionbookstore.github.io/nama-repo-so-anda/");
     }
 
-    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == FILE_CHOOSER && filePathCallback != null) {
-            filePathCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
-            filePathCallback = null;
+    @Override
+    protected void onActivityResult(int r, int c, Intent d) {
+        super.onActivityResult(r, c, d);
+        if (r == C && f != null) {
+            f.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(c, d));
+            f = null;
         }
     }
 
-    @Override public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack(); else super.onBackPressed();
+    @Override
+    public void onBackPressed() {
+        if (w.canGoBack()) {
+            w.goBack();
+        } else {
+            super.onBackPressed();
+        }
     }
 }
+
