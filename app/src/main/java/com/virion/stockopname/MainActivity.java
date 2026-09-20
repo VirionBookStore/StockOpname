@@ -80,8 +80,6 @@ public class MainActivity extends Activity {
             }
 
             this.doubleBackToExitPressedOnce = true;
-            Toast.onShowCustomToast(this, "Tekan sekali lagi untuk keluar aplikasi", Toast.LENGTH_SHORT);
-            // Alternatif Toast standar agar aman di semua versi Android:
             Toast.makeText(this, "Tekan sekali lagi untuk keluar aplikasi", Toast.LENGTH_SHORT).show();
 
             new Handler().postDelayed(new Runnable() {
@@ -89,7 +87,7 @@ public class MainActivity extends Activity {
                 public void run() {
                     doubleBackToExitPressedOnce = false;
                 }
-            }, 2000); // Waktu jeda 2 detik
+            }, 2000);
         }
     }
 }
