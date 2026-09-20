@@ -8,10 +8,10 @@
   <!-- Kembali menggunakan html5-qrcode yang stabil dan dikonfigurasi penuh -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-100 min-h-screen flex flex-col font-sans pt-6 sm:pt-8">
 
   <!-- NOTIFIKASI MELAYANG DARI ATAS -->
-  <div id="topNotification" class="fixed top-5 left-1/2 -translate-x-1/2 -translate-y-24 opacity-0 transition-all duration-300 z-[99999] bg-amber-500 text-white px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs sm:text-sm flex items-center space-x-2 border-2 border-amber-300 pointer-events-none">
+  <div id="topNotification" class="fixed top-10 left-1/2 -translate-x-1/2 -translate-y-24 opacity-0 transition-all duration-300 z-[99999] bg-amber-500 text-white px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs sm:text-sm flex items-center space-x-2 border-2 border-amber-300 pointer-events-none">
     <span>⚠️</span>
     <span id="topNotificationText">Barang tidak ada di Master (Bisa input manual)</span>
   </div>
@@ -199,14 +199,13 @@
     </div>
   </div>
 
-  <!-- MODAL SCANNER KAMERA (MENGGUNAKAN HTML5-QRCODE YANG DIOPTIMALKAN) -->
+  <!-- MODAL SCANNER KAMERA -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-sm hidden items-center justify-center p-3 z-[9999]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3 border">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 id="scannerTitle" class="font-bold text-slate-800 text-sm">Scan Barcode Kamera</h3>
         <button type="button" onclick="closeScannerModal()" class="text-slate-400 font-bold text-lg px-1">&times;</button>
       </div>
-      <!-- Kotak Kamera html5-qrcode -->
       <div id="reader" class="w-full rounded-xl overflow-hidden border bg-black min-h-[260px]"></div>
       <p class="text-[11px] text-slate-500 text-center">Posisikan garis barcode di tengah kotak.</p>
       <div id="scannerErrorMsg" class="hidden text-xs text-rose-600 bg-rose-50 p-2 rounded text-center"></div>
@@ -244,7 +243,6 @@
   </div>
 
   <script>
-    // --- GANTI URL INI DENGAN URL WEB APP GAS ANDA (/exec) ---
     const GAS_URL = "https://script.google.com/macros/s/AKfycbys6Zx-5xdy067bFjVRXBS1TAFWSKpZ54vxLursiiWY09SAo6XFIihExe3csVUDQtz6EQ/exec"; 
 
     let globalProducts = [];
@@ -598,7 +596,6 @@
       }
     }
 
-    // SCANNER MENGGUNAKAN HTML5-QRCODE DENGAN CONFIG FORMAT RETAIL LENGKAP
     function openScannerModal(target = 'SO') {
       currentScannerTarget = target;
       const modal = document.getElementById('scannerModal');
@@ -637,9 +634,7 @@
             processScannedCode(decodedText);
             setTimeout(() => { isProcessingScan = false; }, 1200);
           }, 
-          (errorMessage) => {
-            // Error frame diabaikan agar pencarian terus berjalan mulus
-          }
+          (errorMessage) => {}
         ).then(() => {
           isScannerRunning = true;
         }).catch(err => {
@@ -770,3 +765,4 @@
   </script>
 </body>
 </html>
+
