@@ -1,4 +1,4 @@
-package com.virion.so;
+package com.virion.stockopname;
 
 import android.Manifest;
 import android.app.Activity;
@@ -20,7 +20,6 @@ public class MainActivity extends Activity {
         w = findViewById(R.id.webView);
         WebSettings s = w.getSettings();
         
-        // Mengaktifkan JavaScript, DOM storage, dan fitur kamera/file agar aplikasi web berjalan normal
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
@@ -47,7 +46,6 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Meminta izin akses kamera, lokasi, dan internet
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             requestPermissions(new String[]{
                 Manifest.permission.CAMERA,
@@ -56,7 +54,7 @@ public class MainActivity extends Activity {
             }, 10);
         }
 
-        // PENTING: Ganti URL di bawah ini dengan link GitHub Pages dari repository Stock Opname (Virion SO) Anda
+        // Ganti URL di bawah ini dengan link GitHub Pages repository Stock Opname Anda
         w.loadUrl("https://virionbookstore.github.io/nama-repo-so-anda/");
     }
 
