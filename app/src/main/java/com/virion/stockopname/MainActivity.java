@@ -28,12 +28,25 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
         s.setDatabaseEnabled(true);
+        // PERBAIKAN: Mengizinkan pemutaran media (kamera/video) secara otomatis
+        s.setMediaPlaybackRequiresUserGesture(false);
         
         w.setWebViewClient(new WebViewClient());
         w.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onGeolocationPermissionsShowPrompt(String o, GeolocationPermissions.Callback c) {
                 c.invoke(o, true, false);
+            }
+
+            // PERBAIKAN UTAMA: Mengizinkan permintaan akses kamera dari WebView (HTML/JS Scanner)
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        request.grant(request.getResources());
+                    }
+                });
             }
 
             @Override
@@ -91,4 +104,3 @@ public class MainActivity extends Activity {
         }
     }
 }
-
