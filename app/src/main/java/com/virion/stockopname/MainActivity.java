@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.webkit.*;
+import android.view.View;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -28,8 +29,12 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
         s.setDatabaseEnabled(true);
-        // PERBAIKAN: Mengizinkan pemutaran media (kamera/video) secara otomatis
+        
+        // Mengizinkan pemutaran kamera otomatis tanpa interaksi klik dari user
         s.setMediaPlaybackRequiresUserGesture(false);
+        
+        // Membantu rendering video/kamera di WebView Android versi baru
+        w.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         
         w.setWebViewClient(new WebViewClient());
         w.setWebChromeClient(new WebChromeClient() {
@@ -38,7 +43,7 @@ public class MainActivity extends Activity {
                 c.invoke(o, true, false);
             }
 
-            // PERBAIKAN UTAMA: Mengizinkan permintaan akses kamera dari WebView (HTML/JS Scanner)
+            // Meneruskan izin kamera dari Web ke sistem Android
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 runOnUiThread(new Runnable() {
@@ -47,6 +52,17 @@ public class MainActivity extends Activity {
                         request.grant(request.getResources());
                     }
                 });
+            }
+
+            // PERBAIKAN: Menangani elemen tag <video> pada HTML5 Scanner
+            @Override
+            public void onShowCustomView(View view, CustomViewCallback callback) {
+                super.onShowCustomView(view, callback);
+            }
+
+            @Override
+            public void onHideCustomView() {
+                super.onHideCustomView();
             }
 
             @Override
@@ -104,3 +120,4 @@ public class MainActivity extends Activity {
         }
     }
 }
+
