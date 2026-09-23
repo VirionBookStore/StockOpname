@@ -159,7 +159,6 @@
           <div class="flex justify-between items-center mb-2">
             <h4 class="font-bold text-slate-800 text-xs uppercase">Riwayat Terakhir</h4>
             <div class="flex items-center gap-2">
-              <!-- Dropdown Filter Khusus Admin -->
               <select id="adminHistoryFilter" onchange="renderHistoryList()" class="hidden text-[10px] bg-slate-50 border border-slate-200 rounded-md px-2 py-1 font-semibold text-slate-700"></select>
               <button onclick="loadOpnameHistory()" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md font-medium text-slate-600">🔄 Refresh</button>
             </div>
@@ -255,7 +254,7 @@
     let html5QrCode = null;
     let isScannerRunning = false;
     let isProcessingScan = false;
-    let currentScannerTarget = 'SO';
+    let currentScannerTarget = 'SO'; 
 
     function playBeepSound() {
       try {
@@ -322,20 +321,28 @@
     });
 
     async function callGasApi(action, payload = {}) {
-      try {
-        const response = await fetch(GAS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: action, payload: payload })
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        return new Promise((resolve) => {
+          google.script.run
+            .withSuccessHandler(res => resolve(res))
+            .withFailureHandler(err => resolve({ status: 'error', message: err.toString() }))
+            .handleGasRequest(action, payload);
         });
-        return await response.json();
-      } catch (error) {
-        return { status: 'error', message: 'Koneksi gagal' };
+      } else {
+        try {
+          const response = await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: action, payload: payload })
+          });
+          return await response.json();
+        } catch (error) {
+          return { status: 'error', message: 'Koneksi gagal' };
+        }
       }
     }
 
     window.onload = function() {
-      // Load cache lokal untuk mempercepat render awal master barang
       const cachedProducts = localStorage.getItem('so_cache_products');
       if (cachedProducts) {
         try {
@@ -497,7 +504,7 @@
 
     function loadProducts() {
       callGasApi('getProducts').then(response => {
-        if (response.status === 'success') {
+        if (response && response.status === 'success') {
           globalProducts = response.data;
           localStorage.setItem('so_cache_products', JSON.stringify(globalProducts));
           renderProducts(globalProducts);
@@ -721,7 +728,6 @@
       const now = new Date();
       const timeStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
 
-      // Buat objek riwayat instan
       const localRecord = {
         waktu: timeStr,
         judulSesi: document.getElementById('opnameJudulSesi').value || "1",
@@ -736,12 +742,11 @@
         keterangan: document.getElementById('opnameKeterangan').value || "-"
       };
 
-      // Masukkan ke array lokal secara instan
+      // Tampilkan instan tanpa jeda
       globalHistory.unshift(localRecord);
       updateHistoryDropdown();
       renderHistoryList();
 
-      // Reset form seketika tanpa menunggu server
       document.getElementById('opnameStokFisik').value = "";
       document.getElementById('opnameKeterangan').value = "";
       document.getElementById('selectedProductIndex').value = "";
@@ -757,10 +762,9 @@
         document.getElementById('saveOpnameBtn').classList.add('hidden');
       }
 
-      // Kirim data ke GAS secara senyap di latar belakang
       callGasApi('saveOpname', localRecord).then(res => {
         if (res && res.status === 'success') {
-          // Sinkronisasi senyap dari server jika diperlukan
+          // Sinkronisasi latar belakang sukses
         }
       });
     }
