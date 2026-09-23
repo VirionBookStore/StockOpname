@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aplikasi Virion SO</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Kembali menggunakan html5-qrcode yang stabil dan dikonfigurasi penuh -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
-  <!-- NOTIFIKASI MELAYANG DARI ATAS -->
+  <!-- NOTIFIKASI MELAYANG -->
   <div id="topNotification" class="fixed top-5 left-1/2 -translate-x-1/2 -translate-y-24 opacity-0 transition-all duration-300 z-[99999] bg-amber-500 text-white px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs sm:text-sm flex items-center space-x-2 border-2 border-amber-300 pointer-events-none">
     <span>⚠️</span>
     <span id="topNotificationText">Barang tidak ada di Master (Bisa input manual)</span>
@@ -89,11 +88,11 @@
           <form id="opnameForm" onsubmit="event.preventDefault(); handleSaveOpname(event);" class="space-y-3">
             
             <div class="grid grid-cols-12 gap-2 bg-indigo-50 p-2.5 rounded-xl border border-indigo-100 items-end">
-              <div class="col-span-6 sm:col-span-6">
+              <div class="col-span-6">
                 <label class="block text-[11px] font-bold text-indigo-800 mb-1">Sesi SO</label>
                 <input type="text" id="opnameJudulSesi" required value="1" class="w-full px-2.5 py-1.5 border border-indigo-200 rounded-lg text-xs font-bold bg-white text-indigo-900">
               </div>
-              <div class="col-span-6 sm:col-span-6">
+              <div class="col-span-6">
                 <label class="block text-[11px] font-bold text-indigo-800 mb-1">Mode Scan</label>
                 <select id="soModeSelect" onchange="toggleSoMode()" class="w-full px-2.5 py-1.5 border border-indigo-300 rounded-lg text-xs font-bold bg-white text-indigo-900 cursor-pointer">
                   <option value="manual">Manual</option>
@@ -110,8 +109,8 @@
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 relative">
               <div class="flex justify-between items-center">
                 <span class="text-xs font-bold text-slate-700">Pencarian Barang / ID SKU:</span>
-                <button type="button" onclick="openScannerModal('SO')" title="Scan Barcode Kamera" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-xs font-semibold shadow-sm flex items-center justify-center">
-                  📷
+                <button type="button" onclick="openScannerModal('SO')" title="Scan Barcode Kamera" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-lg text-xs font-semibold shadow-sm flex items-center justify-center">
+                  📷 Scan
                 </button>
               </div>
               
@@ -160,7 +159,7 @@
           <div class="flex justify-between items-center mb-2">
             <h4 class="font-bold text-slate-800 text-xs uppercase">Riwayat Terakhir</h4>
             <div class="flex items-center gap-2">
-              <!-- PERBAIKAN: Dropdown Filter Khusus Admin -->
+              <!-- Dropdown Filter Khusus Admin -->
               <select id="adminHistoryFilter" onchange="renderHistoryList()" class="hidden text-[10px] bg-slate-50 border border-slate-200 rounded-md px-2 py-1 font-semibold text-slate-700"></select>
               <button onclick="loadOpnameHistory()" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md font-medium text-slate-600">🔄 Refresh</button>
             </div>
@@ -169,9 +168,10 @@
             <div class="text-center text-slate-400 text-xs py-3">Memuat riwayat...</div>
           </div>
         </div>
+      </div>
     </main>
 
-    <!-- NAVIGASI TAB BAWAH TERKUNCI -->
+    <!-- NAVIGASI TAB BAWAH -->
     <nav id="bottomNavBar" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-2.5 px-4 z-50 flex justify-center space-x-3 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
       <button onclick="switchTab('products')" id="tabProductsBtn" class="flex-1 max-w-[200px] py-2 bg-blue-600 text-white rounded-xl text-xs font-medium transition text-center shadow-sm">📦 Master Barang</button>
       <button onclick="switchTab('opname')" id="tabOpnameBtn" class="flex-1 max-w-[200px] py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition text-center">📝 Input SO</button>
@@ -202,14 +202,13 @@
     </div>
   </div>
 
-  <!-- MODAL SCANNER KAMERA (MENGGUNAKAN HTML5-QRCODE YANG DIOPTIMALKAN) -->
+  <!-- MODAL SCANNER KAMERA -->
   <div id="scannerModal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-sm hidden items-center justify-center p-3 z-[9999]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3 border">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 id="scannerTitle" class="font-bold text-slate-800 text-sm">Scan Barcode Kamera</h3>
         <button type="button" onclick="closeScannerModal()" class="text-slate-400 font-bold text-lg px-1">&times;</button>
       </div>
-      <!-- Kotak Kamera html5-qrcode -->
       <div id="reader" class="w-full rounded-xl overflow-hidden border bg-black min-h-[260px]"></div>
       <p class="text-[11px] text-slate-500 text-center">Posisikan garis barcode di tengah kotak.</p>
       <div id="scannerErrorMsg" class="hidden text-xs text-rose-600 bg-rose-50 p-2 rounded text-center"></div>
@@ -247,12 +246,10 @@
   </div>
 
   <script>
-    // --- GANTI URL INI DENGAN URL WEB APP GAS ANDA (/exec) ---
-    // --- PERBAIKAN URL: Menggunakan URL Exec yang baru ---
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyiFUTJHx33Pgx1JcJPy6jmoW5DSSsrP2AQXBpdCvuiCDkuhyAznelTKgvbp0BlYp1tAg/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwIYhTdnIin5sH0ESWMuB2ohf1gMpQpKJkYUfBBdWjPsioOPGtmABMrCFI1W2cuO7TCdA/exec"; 
 
     let globalProducts = [];
-    let globalHistory = []; // <-- Tambahan array khusus untuk riwayat
+    let globalHistory = [];
     let currentUserNama = '';
     let currentUserRole = '';
     let html5QrCode = null;
@@ -338,6 +335,15 @@
     }
 
     window.onload = function() {
+      // Load cache lokal untuk mempercepat render awal master barang
+      const cachedProducts = localStorage.getItem('so_cache_products');
+      if (cachedProducts) {
+        try {
+          globalProducts = JSON.parse(cachedProducts);
+          renderProducts(globalProducts);
+        } catch(e) {}
+      }
+
       callGasApi('getAppConfig').then(res => {
         if(res && res.logoUrl) updateUICustomLogo(res.logoUrl);
       });
@@ -493,6 +499,7 @@
       callGasApi('getProducts').then(response => {
         if (response.status === 'success') {
           globalProducts = response.data;
+          localStorage.setItem('so_cache_products', JSON.stringify(globalProducts));
           renderProducts(globalProducts);
         }
       });
@@ -501,7 +508,7 @@
     function renderProducts(products) {
       const tbody = document.getElementById('productTableBody');
       const mobileList = document.getElementById('productMobileList');
-      if (products.length === 0) {
+      if (!products || products.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada barang.</td></tr>`;
         mobileList.innerHTML = `<div class="p-3 bg-white rounded-xl text-center text-slate-400 text-xs">Belum ada barang.</div>`;
         return;
@@ -537,9 +544,7 @@
       if (filtered.length === 0) {
         dropdown.classList.add('hidden');
         dropdown.innerHTML = "";
-        
         showTopNotification("Barang tidak ada di Master (Bisa input manual)");
-
         document.getElementById('selectedProductIndex').value = "MANUAL";
         document.getElementById('isManualEntry').value = "true";
         document.getElementById('saveOpnameBtn').classList.remove('hidden');
@@ -598,15 +603,12 @@
           document.getElementById('displayHargaSatuan').value = 0;
           document.getElementById('displaySupplier').value = "Manual";
           document.getElementById('saveOpnameBtn').classList.remove('hidden');
-          
           showTopNotification("Barang tidak ada di Master (Bisa input manual)");
-
           document.getElementById('opnameStokFisik').focus();
         }
       }
     }
 
-    // SCANNER MENGGUNAKAN HTML5-QRCODE DENGAN CONFIG FORMAT RETAIL LENGKAP
     function openScannerModal(target = 'SO') {
       currentScannerTarget = target;
       const modal = document.getElementById('scannerModal');
@@ -645,9 +647,7 @@
             processScannedCode(decodedText);
             setTimeout(() => { isProcessingScan = false; }, 1200);
           }, 
-          (errorMessage) => {
-            // Error frame diabaikan agar pencarian terus berjalan mulus
-          }
+          (errorMessage) => {}
         ).then(() => {
           isScannerRunning = true;
         }).catch(err => {
@@ -685,41 +685,63 @@
       else { box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-rose-50 text-rose-700'; text.textContent = `${selisih} (Minus)`; }
     }
 
+    // PENYIMPANAN INSTAN TANPA JEDA (OPTIMISTIC UI + BACKGROUND SYNC)
     function handleSaveOpname(event) {
       if(event) event.preventDefault();
       const idx = document.getElementById('selectedProductIndex').value;
       if (idx === "") { alert("Silakan pilih atau scan barang terlebih dahulu!"); return; }
 
       const isManual = document.getElementById('isManualEntry').value === "true";
-      let payload = {
-        judulSesi: document.getElementById('opnameJudulSesi').value || "1",
-        stokFisik: document.getElementById('opnameStokFisik').value || 1,
-        petugas: currentUserNama,
-        keterangan: document.getElementById('opnameKeterangan').value || "-"
-      };
+      let skuVal = "", namaVal = "", stokSys = 0, hargaVal = 0, supVal = "-";
 
       if (isManual) {
         const rawInput = document.getElementById('displaySelectedName').value.trim();
         const parts = rawInput.split(' - ');
         if (parts.length >= 2) {
-          payload.sku = parts[0].trim();
-          payload.namaBarang = parts.slice(1).join(' - ').trim();
+          skuVal = parts[0].trim();
+          namaVal = parts.slice(1).join(' - ').trim();
         } else {
-          payload.sku = rawInput || "MANUAL";
-          payload.namaBarang = rawInput || "Barang Manual";
+          skuVal = rawInput || "MANUAL";
+          namaVal = rawInput || "Barang Manual";
         }
-        payload.stokSistem = document.getElementById('displayStokSistem').value || 0;
-        payload.harga = document.getElementById('displayHargaSatuan').value || 0;
-        payload.supplier = document.getElementById('displaySupplier').value || "-";
+        stokSys = Number(document.getElementById('displayStokSistem').value) || 0;
+        hargaVal = Number(document.getElementById('displayHargaSatuan').value) || 0;
+        supVal = document.getElementById('displaySupplier').value || "-";
       } else {
         const p = globalProducts[idx];
-        payload.sku = p.sku; 
-        payload.namaBarang = p.nama; 
-        payload.stokSistem = p.stok; 
-        payload.harga = p.harga; 
-        payload.supplier = p.supplier || "-";
+        skuVal = p.sku; 
+        namaVal = p.nama; 
+        stokSys = Number(p.stok) || 0; 
+        hargaVal = Number(p.harga) || 0; 
+        supVal = p.supplier || "-";
       }
 
+      const stokFisikVal = Number(document.getElementById('opnameStokFisik').value) || 0;
+      const selisihVal = stokFisikVal - stokSys;
+      const now = new Date();
+      const timeStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+      // Buat objek riwayat instan
+      const localRecord = {
+        waktu: timeStr,
+        judulSesi: document.getElementById('opnameJudulSesi').value || "1",
+        petugas: currentUserNama,
+        sku: skuVal,
+        namaBarang: namaVal,
+        stokSistem: stokSys,
+        stokFisik: stokFisikVal,
+        selisih: selisihVal,
+        harga: hargaVal,
+        supplier: supVal,
+        keterangan: document.getElementById('opnameKeterangan').value || "-"
+      };
+
+      // Masukkan ke array lokal secara instan
+      globalHistory.unshift(localRecord);
+      updateHistoryDropdown();
+      renderHistoryList();
+
+      // Reset form seketika tanpa menunggu server
       document.getElementById('opnameStokFisik').value = "";
       document.getElementById('opnameKeterangan').value = "";
       document.getElementById('selectedProductIndex').value = "";
@@ -735,14 +757,17 @@
         document.getElementById('saveOpnameBtn').classList.add('hidden');
       }
 
-      callGasApi('saveOpname', payload).then(res => {
-        if (res.status === 'success') { loadOpnameHistory(); }
+      // Kirim data ke GAS secara senyap di latar belakang
+      callGasApi('saveOpname', localRecord).then(res => {
+        if (res && res.status === 'success') {
+          // Sinkronisasi senyap dari server jika diperlukan
+        }
       });
     }
 
     function loadOpnameHistory() {
       callGasApi('getHistory').then(response => {
-        if (response.status === 'success') {
+        if (response && response.status === 'success') {
           globalHistory = response.data || [];
           updateHistoryDropdown();
           renderHistoryList();
@@ -750,13 +775,11 @@
       });
     }
 
-    // Fungsi baru untuk mengisi nama-nama karyawan ke dalam dropdown admin
     function updateHistoryDropdown() {
       const dropdown = document.getElementById('adminHistoryFilter');
       if (!dropdown || dropdown.classList.contains('hidden')) return;
       
       const currentVal = dropdown.value;
-      // Ambil nama-nama unik dari riwayat
       let users = [...new Set(globalHistory.map(h => h.petugas))].filter(Boolean);
       
       let html = `<option value="ALL">Semua Riwayat</option>`;
@@ -768,13 +791,11 @@
       });
       
       dropdown.innerHTML = html;
-      // Pertahankan pilihan sebelumnya jika ada
       if (currentVal && (users.includes(currentVal) || currentVal === "ALL" || currentVal === currentUserNama)) {
         dropdown.value = currentVal;
       }
     }
 
-    // Fungsi baru untuk merender riwayat berdasarkan role & filter
     function renderHistoryList() {
       const mobileList = document.getElementById('opnameHistoryMobile');
       if (!globalHistory || globalHistory.length === 0) {
@@ -786,13 +807,14 @@
       const roleStr = currentUserRole.toLowerCase();
       
       if (roleStr === 'user' || roleStr === 'staff') {
-        // User biasa HANYA melihat miliknya sendiri
         filteredData = globalHistory.filter(h => h.petugas === currentUserNama);
       } else {
-        // Admin / Owner melihat berdasarkan dropdown
-        const filterVal = document.getElementById('adminHistoryFilter').value;
-        if (filterVal !== "ALL") {
-          filteredData = globalHistory.filter(h => h.petugas === filterVal);
+        const filterDropdown = document.getElementById('adminHistoryFilter');
+        if (filterDropdown) {
+          const filterVal = filterDropdown.value;
+          if (filterVal && filterVal !== "ALL") {
+            filteredData = globalHistory.filter(h => h.petugas === filterVal);
+          }
         }
       }
       
@@ -802,9 +824,8 @@
       }
 
       let html = '';
-      filteredData.slice(0, 15).forEach(h => { // Menampilkan 15 riwayat terakhir
+      filteredData.slice(0, 15).forEach(h => {
         let badge = h.selisih === 0 ? `<span class="text-emerald-600 font-bold">0</span>` : (h.selisih > 0 ? `<span class="text-blue-600 font-bold">+${h.selisih}</span>` : `<span class="text-rose-600 font-bold">${h.selisih}</span>`);
-        // Menambahkan nama petugas di samping waktu
         html += `<div class="bg-slate-50 p-2.5 rounded-xl border text-[11px] space-y-1"><div class="flex justify-between text-slate-400"><span>${h.waktu} • <b class="text-slate-600">${h.petugas || '-'}</b></span><span class="font-bold text-blue-600">Sesi: ${h.judulSesi}</span></div><div class="font-bold text-slate-800 text-xs">${h.sku} - ${h.namaBarang}</div><div class="grid grid-cols-3 gap-1"><div>Sistem: <b>${h.stokSistem}</b></div><div>Fisik: <b>${h.stokFisik}</b></div><div>Selisih: ${badge}</div></div></div>`;
       });
       mobileList.innerHTML = html;
@@ -824,7 +845,7 @@
         supplier: document.getElementById('addSupplier').value 
       };
       closeAddModal();
-      callGasApi('addProduct', payload).then(r => { if (r.status === 'success') { loadProducts(); alert("Barang baru berhasil disimpan!"); } });
+      callGasApi('addProduct', payload).then(r => { if (r && r.status === 'success') { loadProducts(); alert("Barang baru berhasil disimpan!"); } });
     }
   </script>
 </body>
