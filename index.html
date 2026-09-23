@@ -44,7 +44,7 @@
 
   <!-- DASHBOARD UTAMA -->
   <div id="dashboardSection" class="hidden flex-grow flex flex-col pb-20">
-    <header class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm sticky top-0 z-40">
+    <header class="bg-white border-b border-slate-200 px-4 pt-10 pb-3 flex justify-between items-center shadow-sm sticky top-0 z-40">
       <div class="flex items-center space-x-2.5">
         <div id="headerLogoContainer">
             <div id="defaultHeaderLogo" class="bg-blue-600 text-white font-bold p-2 rounded-lg text-sm">SO</div>
@@ -159,13 +159,16 @@
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-3">
           <div class="flex justify-between items-center mb-2">
             <h4 class="font-bold text-slate-800 text-xs uppercase">Riwayat Terakhir</h4>
-            <button onclick="loadOpnameHistory()" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md font-medium text-slate-600">🔄 Refresh</button>
+            <div class="flex items-center gap-2">
+              <!-- PERBAIKAN: Dropdown Filter Khusus Admin -->
+              <select id="adminHistoryFilter" onchange="renderHistoryList()" class="hidden text-[10px] bg-slate-50 border border-slate-200 rounded-md px-2 py-1 font-semibold text-slate-700"></select>
+              <button onclick="loadOpnameHistory()" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md font-medium text-slate-600">🔄 Refresh</button>
+            </div>
           </div>
           <div id="opnameHistoryMobile" class="space-y-2">
             <div class="text-center text-slate-400 text-xs py-3">Memuat riwayat...</div>
           </div>
         </div>
-      </div>
     </main>
 
     <!-- NAVIGASI TAB BAWAH TERKUNCI -->
@@ -245,15 +248,17 @@
 
   <script>
     // --- GANTI URL INI DENGAN URL WEB APP GAS ANDA (/exec) ---
+    // --- PERBAIKAN URL: Menggunakan URL Exec yang baru ---
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyiFUTJHx33Pgx1JcJPy6jmoW5DSSsrP2AQXBpdCvuiCDkuhyAznelTKgvbp0BlYp1tAg/exec"; 
 
     let globalProducts = [];
+    let globalHistory = []; // <-- Tambahan array khusus untuk riwayat
     let currentUserNama = '';
     let currentUserRole = '';
     let html5QrCode = null;
     let isScannerRunning = false;
     let isProcessingScan = false;
-    let currentScannerTarget = 'SO'; 
+    let currentScannerTarget = 'SO';
 
     function playBeepSound() {
       try {
@@ -387,14 +392,17 @@
       const roleStr = role.toLowerCase();
       const btnProd = document.getElementById('tabProductsBtn');
       const btnSetLogo = document.getElementById('btnSettingLogo');
+      const filterDropdown = document.getElementById('adminHistoryFilter');
       
       if (roleStr === 'user' || roleStr === 'staff') {
         btnProd.style.display = 'none';
         if(btnSetLogo) btnSetLogo.style.display = 'none';
+        if(filterDropdown) filterDropdown.classList.add('hidden');
         switchTab('opname'); 
       } else {
         btnProd.style.display = 'block';
         if(btnSetLogo) btnSetLogo.style.display = 'block';
+        if(filterDropdown) filterDropdown.classList.remove('hidden');
         switchTab('products');
       }
     }
@@ -735,20 +743,71 @@
     function loadOpnameHistory() {
       callGasApi('getHistory').then(response => {
         if (response.status === 'success') {
-          const mobileList = document.getElementById('opnameHistoryMobile');
-          const data = response.data;
-          if (!data || data.length === 0) {
-            mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Belum ada riwayat SO.</div>`;
-            return;
-          }
-          let html = '';
-          data.slice(0, 10).forEach(h => {
-            let badge = h.selisih === 0 ? `<span class="text-emerald-600 font-bold">0</span>` : (h.selisih > 0 ? `<span class="text-blue-600 font-bold">+${h.selisih}</span>` : `<span class="text-rose-600 font-bold">${h.selisih}</span>`);
-            html += `<div class="bg-slate-50 p-2.5 rounded-xl border text-[11px] space-y-1"><div class="flex justify-between text-slate-400"><span>${h.waktu}</span><span class="font-bold text-blue-600">Sesi: ${h.judulSesi}</span></div><div class="font-bold text-slate-800 text-xs">${h.sku} - ${h.namaBarang}</div><div class="grid grid-cols-3 gap-1"><div>Sistem: <b>${h.stokSistem}</b></div><div>Fisik: <b>${h.stokFisik}</b></div><div>Selisih: ${badge}</div></div></div>`;
-          });
-          mobileList.innerHTML = html;
+          globalHistory = response.data || [];
+          updateHistoryDropdown();
+          renderHistoryList();
         }
       });
+    }
+
+    // Fungsi baru untuk mengisi nama-nama karyawan ke dalam dropdown admin
+    function updateHistoryDropdown() {
+      const dropdown = document.getElementById('adminHistoryFilter');
+      if (!dropdown || dropdown.classList.contains('hidden')) return;
+      
+      const currentVal = dropdown.value;
+      // Ambil nama-nama unik dari riwayat
+      let users = [...new Set(globalHistory.map(h => h.petugas))].filter(Boolean);
+      
+      let html = `<option value="ALL">Semua Riwayat</option>`;
+      html += `<option value="${currentUserNama}">Riwayat Saya</option>`;
+      users.forEach(u => {
+        if (u !== currentUserNama) {
+          html += `<option value="${u}">Riwayat ${u}</option>`;
+        }
+      });
+      
+      dropdown.innerHTML = html;
+      // Pertahankan pilihan sebelumnya jika ada
+      if (currentVal && (users.includes(currentVal) || currentVal === "ALL" || currentVal === currentUserNama)) {
+        dropdown.value = currentVal;
+      }
+    }
+
+    // Fungsi baru untuk merender riwayat berdasarkan role & filter
+    function renderHistoryList() {
+      const mobileList = document.getElementById('opnameHistoryMobile');
+      if (!globalHistory || globalHistory.length === 0) {
+        mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Belum ada riwayat SO.</div>`;
+        return;
+      }
+      
+      let filteredData = globalHistory;
+      const roleStr = currentUserRole.toLowerCase();
+      
+      if (roleStr === 'user' || roleStr === 'staff') {
+        // User biasa HANYA melihat miliknya sendiri
+        filteredData = globalHistory.filter(h => h.petugas === currentUserNama);
+      } else {
+        // Admin / Owner melihat berdasarkan dropdown
+        const filterVal = document.getElementById('adminHistoryFilter').value;
+        if (filterVal !== "ALL") {
+          filteredData = globalHistory.filter(h => h.petugas === filterVal);
+        }
+      }
+      
+      if (filteredData.length === 0) {
+        mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Tidak ada riwayat untuk pengguna ini.</div>`;
+        return;
+      }
+
+      let html = '';
+      filteredData.slice(0, 15).forEach(h => { // Menampilkan 15 riwayat terakhir
+        let badge = h.selisih === 0 ? `<span class="text-emerald-600 font-bold">0</span>` : (h.selisih > 0 ? `<span class="text-blue-600 font-bold">+${h.selisih}</span>` : `<span class="text-rose-600 font-bold">${h.selisih}</span>`);
+        // Menambahkan nama petugas di samping waktu
+        html += `<div class="bg-slate-50 p-2.5 rounded-xl border text-[11px] space-y-1"><div class="flex justify-between text-slate-400"><span>${h.waktu} • <b class="text-slate-600">${h.petugas || '-'}</b></span><span class="font-bold text-blue-600">Sesi: ${h.judulSesi}</span></div><div class="font-bold text-slate-800 text-xs">${h.sku} - ${h.namaBarang}</div><div class="grid grid-cols-3 gap-1"><div>Sistem: <b>${h.stokSistem}</b></div><div>Fisik: <b>${h.stokFisik}</b></div><div>Selisih: ${badge}</div></div></div>`;
+      });
+      mobileList.innerHTML = html;
     }
 
     function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); document.getElementById('addModal').classList.add('flex'); }
