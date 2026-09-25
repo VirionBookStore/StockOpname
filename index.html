@@ -6,6 +6,8 @@
   <title>Aplikasi Virion SO</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <!-- Library untuk Export ke Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
@@ -160,6 +162,12 @@
             <h4 class="font-bold text-slate-800 text-xs uppercase">Riwayat Terakhir</h4>
             <div class="flex items-center gap-2">
               <select id="adminHistoryFilter" onchange="renderHistoryList()" class="hidden text-[10px] bg-slate-50 border border-slate-200 rounded-md px-2 py-1 font-semibold text-slate-700"></select>
+              
+              <!-- TOMBOL EXPORT EXCEL -->
+              <button onclick="exportRiwayatToExcel()" class="border border-emerald-300 rounded-md px-2.5 py-1 bg-emerald-50 text-[10px] text-emerald-700 flex items-center gap-1 hover:bg-emerald-100 transition font-semibold">
+                📊 Excel
+              </button>
+
               <button onclick="loadOpnameHistory()" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md font-medium text-slate-600">🔄 Refresh</button>
             </div>
           </div>
@@ -807,6 +815,23 @@
         return;
       }
       
+      let filteredData = getFilteredHistoryData();
+      
+      if (filteredData.length === 0) {
+        mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Tidak ada riwayat untuk pengguna ini.</div>`;
+        return;
+      }
+
+      let html = '';
+      filteredData.slice(0, 15).forEach(h => {
+        let badge = h.selisih === 0 ? `<span class="text-emerald-600 font-bold">0</span>` : (h.selisih > 0 ? `<span class="text-blue-600 font-bold">+${h.selisih}</span>` : `<span class="text-rose-600 font-bold">${h.selisih}</span>`);
+        html += `<div class="bg-slate-50 p-2.5 rounded-xl border text-[11px] space-y-1"><div class="flex justify-between text-slate-400"><span>${h.waktu} • <b class="text-slate-600">${h.petugas || '-'}</b></span><span class="font-bold text-blue-600">Sesi: ${h.judulSesi}</span></div><div class="font-bold text-slate-800 text-xs">${h.sku} - ${h.namaBarang}</div><div class="grid grid-cols-3 gap-1"><div>Sistem: <b>${h.stokSistem}</b></div><div>Fisik: <b>${h.stokFisik}</b></div><div>Selisih: ${badge}</div></div></div>`;
+      });
+      mobileList.innerHTML = html;
+    }
+
+    // Fungsi Pembantu untuk Menyaring Data Berdasarkan Role & Filter Aktif
+    function getFilteredHistoryData() {
       let filteredData = globalHistory;
       const roleStr = currentUserRole.toLowerCase();
       
@@ -821,18 +846,47 @@
           }
         }
       }
+      return filteredData;
+    }
+
+    // FUNGSI EXPORT KE EXCEL BERDASARKAN HAK AKSES
+    function exportRiwayatToExcel() {
+      const dataToExport = getFilteredHistoryData();
       
-      if (filteredData.length === 0) {
-        mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Tidak ada riwayat untuk pengguna ini.</div>`;
+      if (!dataToExport || dataToExport.length === 0) {
+        alert("Tidak ada data riwayat untuk diexport!");
         return;
       }
 
-      let html = '';
-      filteredData.slice(0, 15).forEach(h => {
-        let badge = h.selisih === 0 ? `<span class="text-emerald-600 font-bold">0</span>` : (h.selisih > 0 ? `<span class="text-blue-600 font-bold">+${h.selisih}</span>` : `<span class="text-rose-600 font-bold">${h.selisih}</span>`);
-        html += `<div class="bg-slate-50 p-2.5 rounded-xl border text-[11px] space-y-1"><div class="flex justify-between text-slate-400"><span>${h.waktu} • <b class="text-slate-600">${h.petugas || '-'}</b></span><span class="font-bold text-blue-600">Sesi: ${h.judulSesi}</span></div><div class="font-bold text-slate-800 text-xs">${h.sku} - ${h.namaBarang}</div><div class="grid grid-cols-3 gap-1"><div>Sistem: <b>${h.stokSistem}</b></div><div>Fisik: <b>${h.stokFisik}</b></div><div>Selisih: ${badge}</div></div></div>`;
-      });
-      mobileList.innerHTML = html;
+      let exportFormattedData = dataToExport.map((h, index) => ({
+        "No": index + 1,
+        "Waktu": h.waktu,
+        "Petugas": h.petugas || '-',
+        "Sesi SO": h.judulSesi || '1',
+        "SKU / Barcode": h.sku,
+        "Nama Barang": h.namaBarang,
+        "Stok Sistem": h.stokSistem,
+        "Stok Fisik": h.stokFisik,
+        "Selisih": h.selisih,
+        "Harga (Rp)": h.harga || 0,
+        "Supplier": h.supplier || '-',
+        "Catatan": h.keterangan || '-'
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportFormattedData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Laporan Stock Opname");
+
+      const roleStr = currentUserRole.toLowerCase();
+      let fileLabel = currentUserNama;
+      
+      if (roleStr !== 'user' && roleStr !== 'staff') {
+        const filterDropdown = document.getElementById('adminHistoryFilter');
+        fileLabel = filterDropdown ? filterDropdown.value : 'Semua';
+      }
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `Laporan_SO_${fileLabel}_${dateStr}.xlsx`);
     }
 
     function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); document.getElementById('addModal').classList.add('flex'); }
