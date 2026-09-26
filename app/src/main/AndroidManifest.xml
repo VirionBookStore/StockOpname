@@ -3,18 +3,19 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    
-    <!-- TAMBAHAN: Memberi tahu sistem bahwa aplikasi butuh hardware kamera & autofocus untuk scanner -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
-
-    <application 
-        android:theme="@style/AppTheme" 
-        android:label="Stock Opname GV Virion" 
-        android:icon="@drawable/ic_launcher" 
-        android:usesCleartextTraffic="true" 
+    <application
+        android:theme="@style/AppTheme"
+        android:label="Stock Opname GV Virion"
+        android:icon="@drawable/ic_launcher"
+        android:usesCleartextTraffic="true"
         android:hardwareAccelerated="true">
-        
+        <provider
+            android:name=".ShareFileProvider"
+            android:authorities="${applicationId}.sharedfiles"
+            android:exported="false"
+            android:grantUriPermissions="true" />
         <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
