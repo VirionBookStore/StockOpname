@@ -6,7 +6,6 @@
   <title>Aplikasi Virion SO</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <!-- Library untuk Export ke Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
@@ -163,7 +162,6 @@
             <div class="flex items-center gap-2">
               <select id="adminHistoryFilter" onchange="renderHistoryList()" class="hidden text-[10px] bg-slate-50 border border-slate-200 rounded-md px-2 py-1 font-semibold text-slate-700"></select>
               
-              <!-- TOMBOL EXPORT EXCEL -->
               <button onclick="exportRiwayatToExcel()" class="border border-emerald-300 rounded-md px-2.5 py-1 bg-emerald-50 text-[10px] text-emerald-700 flex items-center gap-1 hover:bg-emerald-100 transition font-semibold">
                 📊 Excel
               </button>
@@ -253,7 +251,7 @@
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz2I1ZG2wrHPzA3eWeliJY70wh_XbAYZVBwgsjpDalLU_yUn9f46qqfZZMO8PB3ZPmnhg/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzDpAgn-Zf60kRi6fe0rsBTQEwFX6JLNimpGxfMUQWKwZpwV8gDD04hbuItqBSQshkzrQ/exec"; 
 
     let globalProducts = [];
     let globalHistory = [];
@@ -263,6 +261,7 @@
     let isScannerRunning = false;
     let isProcessingScan = false;
     let currentScannerTarget = 'SO'; 
+    let currentTotalSoSebelumnya = 0; // Variabel penyimpan akumulasi SO
 
     function playBeepSound() {
       try {
@@ -588,14 +587,41 @@
       document.getElementById('searchDropdownResults').classList.add('hidden');
       document.getElementById('varianceResultBox').classList.add('hidden');
 
-      const mode = document.getElementById('soModeSelect').value;
-      if (mode === 'otomatis') {
-        document.getElementById('opnameStokFisik').value = document.getElementById('autoQtyInput').value;
-        document.getElementById('opnameKeterangan').value = "Scan Otomatis";
-        handleSaveOpname();
-      } else {
-        document.getElementById('opnameStokFisik').focus();
-      }
+      // Panggil fungsi untuk cek riwayat SO
+      fetchPreviousSoAndApply(p.sku);
+    }
+
+    // FUNGSI BARU: Mengambil riwayat SO dari backend
+    function fetchPreviousSoAndApply(sku) {
+      currentTotalSoSebelumnya = 0;
+      document.getElementById('opnameKeterangan').placeholder = "Memeriksa riwayat...";
+      calculateVariance(); // Hitung ulang dengan nilai 0 terlebih dahulu
+
+      callGasApi('getPreviousSO', { sku: sku }).then(res => {
+        if (res && res.status === 'success') {
+          currentTotalSoSebelumnya = res.totalSebelumnya;
+          const catatanInput = document.getElementById('opnameKeterangan');
+          if (currentTotalSoSebelumnya > 0) {
+            catatanInput.placeholder = `SO Sblm: ${currentTotalSoSebelumnya} (${res.detailRiwayat})`;
+          } else {
+            catatanInput.placeholder = "Opsional";
+          }
+        } else {
+          currentTotalSoSebelumnya = 0;
+          document.getElementById('opnameKeterangan').placeholder = "Opsional";
+        }
+        
+        calculateVariance(); // Hitung ulang selisih dengan data terbaru
+        
+        const mode = document.getElementById('soModeSelect').value;
+        if (mode === 'otomatis') {
+          document.getElementById('opnameStokFisik').value = document.getElementById('autoQtyInput').value;
+          document.getElementById('opnameKeterangan').value = "Scan Otomatis";
+          handleSaveOpname();
+        } else {
+          document.getElementById('opnameStokFisik').focus();
+        }
+      });
     }
 
     function processScannedCode(code) {
@@ -619,6 +645,9 @@
           document.getElementById('displaySupplier').value = "Manual";
           document.getElementById('saveOpnameBtn').classList.remove('hidden');
           showTopNotification("Barang tidak ada di Master (Bisa input manual)");
+          
+          currentTotalSoSebelumnya = 0;
+          document.getElementById('opnameKeterangan').placeholder = "Opsional";
           document.getElementById('opnameStokFisik').focus();
         }
       }
@@ -692,15 +721,33 @@
       const val = document.getElementById('opnameStokFisik').value;
       const box = document.getElementById('varianceResultBox');
       const text = document.getElementById('varianceText');
+      
       if (val === "") { box.classList.add('hidden'); return; }
-      const selisih = Number(val) - stokSistem;
+      
+      const stokFisikSekarang = Number(val) || 0;
+      const totalFisikKeseluruhan = currentTotalSoSebelumnya + stokFisikSekarang;
+      
+      // Rumus baru: (SO Sebelumnya + Fisik Sekarang) - Stok Sistem 
+      const selisih = totalFisikKeseluruhan - stokSistem; 
+      
       box.classList.remove('hidden');
-      if (selisih === 0) { box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-emerald-50 text-emerald-700'; text.textContent = '0 (Sesuai)'; }
-      else if (selisih > 0) { box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-blue-50 text-blue-700'; text.textContent = `+${selisih} (Surplus)`; }
-      else { box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-rose-50 text-rose-700'; text.textContent = `${selisih} (Minus)`; }
+      
+      let infoText = `Sistem: ${stokSistem} | Sblm: ${currentTotalSoSebelumnya} | Skrg: ${stokFisikSekarang} | `;
+      
+      if (selisih === 0) { 
+        box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-emerald-50 text-emerald-700'; 
+        text.textContent = infoText + '0 (Sesuai)'; 
+      }
+      else if (selisih > 0) { 
+        box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-blue-50 text-blue-700'; 
+        text.textContent = infoText + `+${selisih} (Surplus)`; 
+      }
+      else { 
+        box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-rose-50 text-rose-700'; 
+        text.textContent = infoText + `${selisih} (Minus)`; 
+      }
     }
 
-    // PENYIMPANAN INSTAN TANPA JEDA (OPTIMISTIC UI + BACKGROUND SYNC)
     function handleSaveOpname(event) {
       if(event) event.preventDefault();
       const idx = document.getElementById('selectedProductIndex').value;
@@ -732,7 +779,8 @@
       }
 
       const stokFisikVal = Number(document.getElementById('opnameStokFisik').value) || 0;
-      const selisihVal = stokFisikVal - stokSys;
+      const totalFisik = currentTotalSoSebelumnya + stokFisikVal;
+      const selisihVal = totalFisik - stokSys;
       const now = new Date();
       const timeStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
 
@@ -750,7 +798,6 @@
         keterangan: document.getElementById('opnameKeterangan').value || "-"
       };
 
-      // Tampilkan instan tanpa jeda
       globalHistory.unshift(localRecord);
       updateHistoryDropdown();
       renderHistoryList();
@@ -764,6 +811,10 @@
       document.getElementById('displayHargaSatuan').value = 0;
       document.getElementById('displaySupplier').value = "-";
       document.getElementById('varianceResultBox').classList.add('hidden');
+      
+      // Reset akumulator setelah menyimpan
+      currentTotalSoSebelumnya = 0;
+      document.getElementById('opnameKeterangan').placeholder = "Opsional";
 
       const mode = document.getElementById('soModeSelect').value;
       if (mode === 'otomatis') {
@@ -772,7 +823,7 @@
 
       callGasApi('saveOpname', localRecord).then(res => {
         if (res && res.status === 'success') {
-          // Sinkronisasi latar belakang sukses
+          // Tersimpan di latar belakang
         }
       });
     }
@@ -830,7 +881,6 @@
       mobileList.innerHTML = html;
     }
 
-    // Fungsi Pembantu untuk Menyaring Data Berdasarkan Role & Filter Aktif
     function getFilteredHistoryData() {
       let filteredData = globalHistory;
       const roleStr = currentUserRole.toLowerCase();
@@ -849,7 +899,6 @@
       return filteredData;
     }
 
-    // FUNGSI EXPORT KE EXCEL BERDASARKAN HAK AKSES
     function exportRiwayatToExcel() {
       const dataToExport = getFilteredHistoryData();
       
