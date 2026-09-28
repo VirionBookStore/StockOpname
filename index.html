@@ -537,7 +537,7 @@
       mobileList.innerHTML = htmlMobile;
     }
 
-    function handleSearchInput(val) {
+function handleSearchInput(val) {
       const cleanVal = val.toLowerCase().trim();
       const dropdown = document.getElementById('searchDropdownResults');
       
@@ -548,6 +548,7 @@
         document.getElementById('displayStokSistem').value = 0;
         document.getElementById('displayHargaSatuan').value = 0;
         document.getElementById('displaySupplier').value = "-";
+        toggleMasterFields(false); // Kunci kembali
         return;
       }
 
@@ -562,6 +563,7 @@
         document.getElementById('selectedProductIndex').value = "MANUAL";
         document.getElementById('isManualEntry').value = "true";
         document.getElementById('saveOpnameBtn').classList.remove('hidden');
+        toggleMasterFields(true); // Buka kunci karena input manual
         return;
       }
 
@@ -586,6 +588,8 @@
       document.getElementById('displaySupplier').value = p.supplier || '-';
       document.getElementById('searchDropdownResults').classList.add('hidden');
       document.getElementById('varianceResultBox').classList.add('hidden');
+
+      toggleMasterFields(false); // Kunci karena barang ada di master
 
       // Panggil fungsi untuk cek riwayat SO
       fetchPreviousSoAndApply(p.sku);
@@ -649,6 +653,8 @@
           currentTotalSoSebelumnya = 0;
           document.getElementById('opnameKeterangan').placeholder = "Opsional";
           document.getElementById('opnameStokFisik').focus();
+
+          toggleMasterFields(true); // Buka kunci karena input manual
         }
       }
     }
@@ -827,6 +833,8 @@ function handleSaveOpname(event) {
       document.getElementById('displayHargaSatuan').value = 0;
       document.getElementById('displaySupplier').value = "-";
       document.getElementById('varianceResultBox').classList.add('hidden');
+
+      toggleMasterFields(false);
       
       // Reset akumulator setelah menyimpan
       currentTotalSoSebelumnya = 0;
@@ -952,6 +960,23 @@ function handleSaveOpname(event) {
 
       const dateStr = new Date().toISOString().slice(0, 10);
       XLSX.writeFile(wb, `Laporan_SO_${fileLabel}_${dateStr}.xlsx`);
+    }
+
+    // FUNGSI BARU: Mengunci/membuka kolom master
+    function toggleMasterFields(isEditable) {
+      const elStok = document.getElementById('displayStokSistem');
+      const elHarga = document.getElementById('displayHargaSatuan');
+      const elSupp = document.getElementById('displaySupplier');
+      
+      if (isEditable) {
+        elStok.readOnly = false; elStok.classList.remove('bg-slate-100'); elStok.classList.add('bg-white');
+        elHarga.readOnly = false; elHarga.classList.remove('bg-slate-100'); elHarga.classList.add('bg-white');
+        elSupp.readOnly = false; elSupp.classList.remove('bg-slate-100'); elSupp.classList.add('bg-white');
+      } else {
+        elStok.readOnly = true; elStok.classList.add('bg-slate-100'); elStok.classList.remove('bg-white');
+        elHarga.readOnly = true; elHarga.classList.add('bg-slate-100'); elHarga.classList.remove('bg-white');
+        elSupp.readOnly = true; elSupp.classList.add('bg-slate-100'); elSupp.classList.remove('bg-white');
+      }
     }
 
     function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); document.getElementById('addModal').classList.add('flex'); }
