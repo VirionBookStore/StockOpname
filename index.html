@@ -10,10 +10,16 @@
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
-  <!-- NOTIFIKASI MELAYANG -->
+  <!-- NOTIFIKASI PERINGATAN MELAYANG -->
   <div id="topNotification" class="fixed top-5 left-1/2 -translate-x-1/2 -translate-y-24 opacity-0 transition-all duration-300 z-[99999] bg-amber-500 text-white px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs sm:text-sm flex items-center space-x-2 border-2 border-amber-300 pointer-events-none">
     <span>⚠️</span>
     <span id="topNotificationText">Barang tidak ada di Master (Bisa input manual)</span>
+  </div>
+
+  <!-- NOTIFIKASI SUKSES MELAYANG -->
+  <div id="successNotification" class="fixed top-5 left-1/2 -translate-x-1/2 -translate-y-24 opacity-0 transition-all duration-300 z-[99999] bg-emerald-500 text-white px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs sm:text-sm flex items-center space-x-2 border-2 border-emerald-300 pointer-events-none">
+    <span>✅</span>
+    <span id="successNotificationText">Berhasil!</span>
   </div>
 
   <!-- HALAMAN LOGIN -->
@@ -281,9 +287,15 @@
           <div><label class="block mb-1 font-semibold">Harga (Rp)</label><input type="number" id="editHarga" required min="0" class="w-full p-2 border rounded-lg"></div>
           <div><label class="block mb-1 font-semibold">Supplier</label><input type="text" id="editSupplier" required class="w-full p-2 border rounded-lg"></div>
         </div>
-        <div class="flex justify-end space-x-2 pt-2 border-t">
-          <button type="button" onclick="closeEditModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg">Batal</button>
-          <button type="submit" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition">Simpan Perubahan</button>
+        
+        <!-- BAGIAN INI DIPERBARUI: DITAMBAHKAN TOMBOL HAPUS -->
+        <div class="flex justify-between pt-2 border-t mt-3">
+          <button type="button" onclick="handleDeleteProduct()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition shadow-sm">🗑️ Hapus</button>
+          
+          <div class="flex space-x-2">
+            <button type="button" onclick="closeEditModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg">Batal</button>
+            <button type="submit" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition shadow-sm">Simpan</button>
+          </div>
         </div>
       </form>
     </div>
@@ -291,7 +303,7 @@
 
   <script>
     // PASTIKAN URL GAS INI SESUAI DENGAN DEPLOYMENT BARU ANDA
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw72kspfLEV-LU0hEtpwrPaOhOUk4-zYO93VyBecFewo5ReRLrClGBfH6sdnQ25st7gbg/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbziaQEN9Yib9x5MTLBSPTfgS6jY3cdGkM5d6glaVmSsR4_aYQDGJTdpcDkC6-T_O7ul5w/exec"; 
 
     let globalProducts = [];
     let globalHistory = [];
@@ -301,8 +313,8 @@
     let isScannerRunning = false;
     let isProcessingScan = false;
     let currentScannerTarget = 'SO'; 
-    let currentTotalSoSebelumnya = 0; // Variabel penyimpan akumulasi SO
-    let editOldSku = ""; // Untuk menyimpan SKU lama saat edit
+    let currentTotalSoSebelumnya = 0; 
+    let editOldSku = ""; 
 
     function playBeepSound() {
       try {
@@ -350,6 +362,21 @@
       playWarningSound();
       const notif = document.getElementById('topNotification');
       const textElem = document.getElementById('topNotificationText');
+      textElem.textContent = message;
+      
+      notif.classList.remove('translate-y-24', 'opacity-0');
+      notif.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        notif.classList.remove('translate-y-0', 'opacity-100');
+        notif.classList.add('-translate-y-24', 'opacity-0');
+      }, 2500);
+    }
+
+    // FUNGSI NOTIFIKASI SUKSES (Pengganti Alert)
+    function showSuccessNotification(message) {
+      const notif = document.getElementById('successNotification');
+      const textElem = document.getElementById('successNotificationText');
       textElem.textContent = message;
       
       notif.classList.remove('translate-y-24', 'opacity-0');
@@ -556,7 +583,6 @@
           globalProducts = response.data;
           localStorage.setItem('so_cache_products', JSON.stringify(globalProducts));
           
-          // Memastikan jika ada nilai pencarian, table tetap terfilter setelah refresh data
           const keyword = document.getElementById('searchMasterBarang').value;
           if(keyword) filterMasterBarang();
           else renderProducts(globalProducts);
@@ -564,7 +590,6 @@
       });
     }
 
-    // FUNGSI RENDER PRODUCTS YANG SUDAH DIUPDATE (Ditambah tombol Edit)
     function renderProducts(products) {
       const tbody = document.getElementById('productTableBody');
       const mobileList = document.getElementById('productMobileList');
@@ -584,7 +609,6 @@
       mobileList.innerHTML = htmlMobile;
     }
 
-    // FUNGSI BARU: PENCARIAN MASTER BARANG
     function filterMasterBarang() {
       const keyword = document.getElementById('searchMasterBarang').value.toLowerCase();
       const filtered = globalProducts.filter(p => 
@@ -604,7 +628,7 @@
         document.getElementById('displayStokSistem').value = 0;
         document.getElementById('displayHargaSatuan').value = 0;
         document.getElementById('displaySupplier').value = "-";
-        toggleMasterFields(false); // Kunci kembali
+        toggleMasterFields(false); 
         return;
       }
 
@@ -619,7 +643,7 @@
         document.getElementById('selectedProductIndex').value = "MANUAL";
         document.getElementById('isManualEntry').value = "true";
         document.getElementById('saveOpnameBtn').classList.remove('hidden');
-        toggleMasterFields(true); // Buka kunci karena input manual
+        toggleMasterFields(true); 
         return;
       }
 
@@ -645,16 +669,15 @@
       document.getElementById('searchDropdownResults').classList.add('hidden');
       document.getElementById('varianceResultBox').classList.add('hidden');
 
-      toggleMasterFields(false); // Kunci karena barang ada di master
+      toggleMasterFields(false); 
 
-      // Panggil fungsi untuk cek riwayat SO
       fetchPreviousSoAndApply(p.sku);
     }
 
     function fetchPreviousSoAndApply(sku) {
       currentTotalSoSebelumnya = 0;
       document.getElementById('opnameKeterangan').placeholder = "Memeriksa riwayat...";
-      calculateVariance(); // Hitung ulang dengan nilai 0 terlebih dahulu
+      calculateVariance(); 
 
       callGasApi('getPreviousSO', { sku: sku }).then(res => {
         if (res && res.status === 'success') {
@@ -670,7 +693,7 @@
           document.getElementById('opnameKeterangan').placeholder = "Opsional";
         }
         
-        calculateVariance(); // Hitung ulang selisih dengan data terbaru
+        calculateVariance(); 
         
         const mode = document.getElementById('soModeSelect').value;
         if (mode === 'otomatis') {
@@ -683,7 +706,7 @@
       });
     }
 
-    // FUNGSI BARU: SCANNER DIPERBARUI AGAR BISA MEMANGGIL DROPDOWN
+    // FUNGSI DIPERBARUI: Memicu dropdown saat barcode scan diproses
     function processScannedCode(code) {
       playBeepSound();
       const cleanCode = code.toLowerCase().trim();
@@ -693,17 +716,16 @@
         closeScannerModal();
       } else {
         closeScannerModal();
-        // Cari apakah ada kecocokan 100% (exact match)
         const exactIdx = globalProducts.findIndex(p => p.sku.toLowerCase() === cleanCode);
         
         if (exactIdx !== -1) {
-          // Jika cocok 100%, langsung pilih barang tersebut
           selectProductByIndex(exactIdx);
         } else {
-          // JIKA TIDAK COCOK 100% (Contoh: beda 1 angka)
-          // Masukkan angka ke kolom input dan panggil fungsi pencarian agar dropdown muncul
-          document.getElementById('displaySelectedName').value = code;
-          handleSearchInput(code); 
+          // JIKA TIDAK COCOK 100% (Contoh beda 1 angka):
+          // Akan men-trigger event 'input' agar sistem memunculkan Dropdown 
+          const inputEl = document.getElementById('displaySelectedName');
+          inputEl.value = code;
+          inputEl.dispatchEvent(new Event('input', { bubbles: true }));
         }
       }
     }
@@ -1025,6 +1047,7 @@
     function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); document.getElementById('addModal').classList.add('flex'); }
     function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); document.getElementById('addModal').classList.remove('flex'); document.getElementById('addProductForm').reset(); }
     
+    // FUNGSI DIPERBARUI: Notifikasi alert() dirubah ke Toast UI (showSuccessNotification)
     function handleSaveProduct(event) {
       event.preventDefault();
       const payload = { 
@@ -1036,10 +1059,14 @@
         supplier: document.getElementById('addSupplier').value 
       };
       closeAddModal();
-      callGasApi('addProduct', payload).then(r => { if (r && r.status === 'success') { loadProducts(); alert("Barang baru berhasil disimpan!"); } });
+      callGasApi('addProduct', payload).then(r => { 
+        if (r && r.status === 'success') { 
+          loadProducts(); 
+          showSuccessNotification("Barang baru berhasil disimpan!"); 
+        } 
+      });
     }
 
-    // FUNGSI BARU: MENU EDIT BARANG
     function openEditModal(sku) {
       const p = globalProducts.find(item => item.sku === sku);
       if(!p) return;
@@ -1060,6 +1087,7 @@
       document.getElementById('editModal').classList.remove('flex');
     }
 
+    // FUNGSI DIPERBARUI: Notifikasi alert() dirubah ke Toast UI (showSuccessNotification)
     function handleEditProduct(event) {
       event.preventDefault();
       const btn = event.target.querySelector('button[type="submit"]');
@@ -1076,16 +1104,45 @@
       };
 
       callGasApi('updateProduct', payload).then(r => {
-        btn.disabled = false; btn.textContent = "Simpan Perubahan";
+        btn.disabled = false; btn.textContent = "Simpan";
         if (r && r.status === 'success') {
           closeEditModal();
           loadProducts(); 
-          alert("Data barang berhasil diupdate!");
+          showSuccessNotification("Data barang berhasil diupdate!");
           document.getElementById('searchMasterBarang').value = ""; 
         } else {
           alert("Gagal update: " + (r.message || "Terjadi kesalahan"));
         }
       });
+    }
+
+    // FUNGSI BARU: Fungsi untuk menghapus barang
+    function handleDeleteProduct() {
+      const sku = document.getElementById('editSku').value;
+      
+      // Minta konfirmasi sebelum menghapus
+      if (confirm("Apakah Anda yakin ingin menghapus barang dengan SKU: " + sku + " ?\n\nData yang dihapus dari master tidak dapat dikembalikan.")) {
+        
+        // Ubah status tombol untuk loading UI
+        const btn = document.querySelector('#editProductForm button[onclick="handleDeleteProduct()"]');
+        btn.disabled = true; 
+        btn.textContent = "Menghapus...";
+
+        // Panggil endpoint ke Google Script
+        callGasApi('deleteProduct', { sku: editOldSku }).then(r => {
+          btn.disabled = false; 
+          btn.innerHTML = "🗑️ Hapus";
+          
+          if (r && r.status === 'success') {
+            closeEditModal();
+            loadProducts(); // Load ulang data dari spreadsheet
+            showSuccessNotification("Data barang berhasil dihapus!");
+            document.getElementById('searchMasterBarang').value = ""; 
+          } else {
+            alert("Gagal menghapus: " + (r.message || "Terjadi kesalahan server"));
+          }
+        });
+      }
     }
   </script>
 </body>
