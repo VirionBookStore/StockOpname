@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.content.SharedPreferences;
 import android.util.Base64;
 import android.webkit.*;
 import android.view.View;
@@ -22,11 +23,13 @@ public class MainActivity extends Activity {
     private static final int SAVE_FILE_REQUEST = 1002;
     private boolean doubleBackToExitPressedOnce = false;
     private File pendingSaveFile;
+    private SharedPreferences sessionPrefs;
 
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         setContentView(R.layout.activity_main);
+        sessionPrefs = getSharedPreferences("virion_so_session", MODE_PRIVATE);
 
         w = findViewById(R.id.webView);
         WebSettings s = w.getSettings();
@@ -35,7 +38,11 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
         s.setDatabaseEnabled(true);
+        s.setJavaScriptCanOpenWindowsAutomatically(true);
+        s.setSupportMultipleWindows(false);
         s.setMediaPlaybackRequiresUserGesture(false);
+        CookieManager.getInstance().setAcceptCookie(true);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(w, true);
         w.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         w.addJavascriptInterface(new AndroidExportBridge(), "AndroidInterface");
@@ -82,6 +89,7 @@ public class MainActivity extends Activity {
             }, 10);
         }
 
+        w.clearCache(false);
         w.loadUrl("https://virionbookstore.github.io/StockOpname/");
     }
 
@@ -107,6 +115,24 @@ public class MainActivity extends Activity {
     }
 
     private class AndroidExportBridge {
+        @JavascriptInterface
+        public void saveSession(String nama, String role) {
+            sessionPrefs.edit().putString("nama", nama == null ? "" : nama).putString("role", role == null ? "" : role).apply();
+        }
+
+        @JavascriptInterface
+        public String getSession() {
+            String nama = sessionPrefs.getString("nama", "");
+            String role = sessionPrefs.getString("role", "");
+            if (nama.isEmpty() || role.isEmpty()) return "";
+            return android.util.Base64.encodeToString((nama + "\n" + role).getBytes(java.nio.charset.StandardCharsets.UTF_8), android.util.Base64.NO_WRAP);
+        }
+
+        @JavascriptInterface
+        public void clearSession() {
+            sessionPrefs.edit().clear().apply();
+        }
+
         @JavascriptInterface
         public void exportExcel(final String fileName, final String base64Data) {
             runOnUiThread(() -> {
