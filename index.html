@@ -1183,7 +1183,7 @@
     function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); document.getElementById('addModal').classList.remove('flex'); document.getElementById('addProductForm').reset(); }
     
     // FUNGSI DIPERBARUI: Notifikasi alert() dirubah ke Toast UI (showSuccessNotification)
-    function handleSaveProduct(event) {
+    async function handleSaveProduct(event) {
       event.preventDefault();
       const payload = { 
         sku: document.getElementById('addSku').value, 
@@ -1226,7 +1226,7 @@
     }
 
     // FUNGSI DIPERBARUI: Notifikasi alert() dirubah ke Toast UI (showSuccessNotification)
-    function handleEditProduct(event) {
+    async function handleEditProduct(event) {
       event.preventDefault();
       const btn = event.target.querySelector('button[type="submit"]');
       btn.disabled = true; btn.textContent = "Menyimpan...";
