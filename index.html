@@ -480,6 +480,11 @@
       await new Promise((resolve,reject)=>{const tx=db.transaction(PRODUCT_STORE,'readwrite');tx.objectStore(PRODUCT_STORE).put(p);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
     }
 
+    async function deleteLocalProduct(sku) {
+      const db=await openProductDatabase();
+      await new Promise((resolve,reject)=>{const tx=db.transaction(PRODUCT_STORE,'readwrite');tx.objectStore(PRODUCT_STORE).delete(String(sku));tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+    }
+
     async function syncMasterDatabase() {
       if(masterSyncInProgress)return; masterSyncInProgress=true;
       const buttons=['syncMasterBtn','syncSoDbBtn'];
@@ -837,6 +842,11 @@
       } else {
         // Tunggu kamera benar-benar berhenti agar fokus Qty tidak tertahan oleh modal scanner.
         await closeScannerModal();
+        const localCount = await getLocalProductCount();
+        if (!localCount) {
+          showTopNotification("Database master belum tersimpan di HP. Tekan 'Update Master' terlebih dahulu.");
+          return;
+        }
         const exactProduct = await getLocalProductBySku(cleanCode);
         
         if (exactProduct) {
@@ -1184,14 +1194,15 @@
         supplier: document.getElementById('addSupplier').value 
       };
       closeAddModal();
-      callGasApi('addProduct', payload).then(r => { 
-        if (r && r.status === 'success') { 
-          await upsertLocalProduct(payload);
-          await updateLocalDbStatus();
-          await loadLocalProductPage(document.getElementById('searchMasterBarang').value);
-          showSuccessNotification("Barang baru berhasil disimpan!"); 
-        } 
-      });
+      const r = await callGasApi('addProduct', payload);
+      if (r && r.status === 'success') {
+        await upsertLocalProduct(payload);
+        await updateLocalDbStatus();
+        await loadLocalProductPage(document.getElementById('searchMasterBarang').value);
+        showSuccessNotification("Barang baru berhasil disimpan!");
+      } else {
+        alert("Gagal menyimpan: " + (r?.message || "Terjadi kesalahan"));
+      }
     }
 
     async function openEditModal(sku) {
@@ -1230,19 +1241,19 @@
         supplier: document.getElementById('editSupplier').value
       };
 
-      callGasApi('updateProduct', payload).then(r => {
-        btn.disabled = false; btn.textContent = "Simpan";
-        if (r && r.status === 'success') {
-          closeEditModal();
-          await upsertLocalProduct(payload);
-          await updateLocalDbStatus();
-          await loadLocalProductPage(document.getElementById('searchMasterBarang').value);
-          showSuccessNotification("Data barang berhasil diupdate!");
-          document.getElementById('searchMasterBarang').value = ""; 
-        } else {
-          alert("Gagal update: " + (r.message || "Terjadi kesalahan"));
-        }
-      });
+      const r = await callGasApi('updateProduct', payload);
+      btn.disabled = false; btn.textContent = "Simpan";
+      if (r && r.status === 'success') {
+        closeEditModal();
+        if (payload.oldSku && payload.oldSku !== payload.sku) await deleteLocalProduct(payload.oldSku);
+        await upsertLocalProduct(payload);
+        await updateLocalDbStatus();
+        await loadLocalProductPage(document.getElementById('searchMasterBarang').value);
+        showSuccessNotification("Data barang berhasil diupdate!");
+        document.getElementById('searchMasterBarang').value = "";
+      } else {
+        alert("Gagal update: " + (r?.message || "Terjadi kesalahan"));
+      }
     }
 
     // FUNGSI BARU: Fungsi untuk menghapus barang
@@ -1258,17 +1269,19 @@
         btn.textContent = "Menghapus...";
 
         // Panggil endpoint ke Google Script
-        callGasApi('deleteProduct', { sku: editOldSku }).then(r => {
+        callGasApi('deleteProduct', { sku: editOldSku }).then(async r => {
           btn.disabled = false; 
           btn.innerHTML = "🗑️ Hapus";
           
           if (r && r.status === 'success') {
             closeEditModal();
-            loadProducts(); // Load ulang data dari spreadsheet
+            await deleteLocalProduct(editOldSku);
+            await updateLocalDbStatus();
+            await loadLocalProductPage(document.getElementById('searchMasterBarang').value);
             showSuccessNotification("Data barang berhasil dihapus!");
-            document.getElementById('searchMasterBarang').value = ""; 
+            document.getElementById('searchMasterBarang').value = "";
           } else {
-            alert("Gagal menghapus: " + (r.message || "Terjadi kesalahan server"));
+            alert("Gagal menghapus: " + (r?.message || "Terjadi kesalahan server"));
           }
         });
       }
