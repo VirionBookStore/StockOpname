@@ -20,15 +20,15 @@ android {
     if (keystoreFile && keystorePassword && keyAlias && keyPassword) {
         signingConfigs {
             release {
-                storeFile file(keystoreFile)
-                storePassword keystorePassword
-                keyAlias keyAlias
-                keyPassword keyPassword
+                storeFile = project.file(keystoreFile)
+                storePassword = keystorePassword
+                keyAlias = keyAlias
+                keyPassword = keyPassword
             }
         }
         buildTypes {
             release {
-                signingConfig signingConfigs.release
+                signingConfig = signingConfigs.release
                 minifyEnabled false
             }
         }
