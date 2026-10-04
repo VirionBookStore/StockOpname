@@ -9,29 +9,7 @@ android {
         minSdk 23
         targetSdk 35
         versionCode System.getenv("GITHUB_RUN_NUMBER")?.toInteger() ?: 1
-        versionName "1.0.${System.getenv("GITHUB_RUN_NUMBER") ?: "1"}"
-    }
-
-    def signingKeystorePath = System.getenv("ANDROID_KEYSTORE_FILE")
-    def signingStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-    def signingKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
-    def signingKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
-
-    if (signingKeystorePath && signingStorePassword && signingKeyAlias && signingKeyPassword) {
-        signingConfigs {
-            create("release") {
-                setStoreFile(project.file(signingKeystorePath))
-                setStorePassword(signingStorePassword)
-                setKeyAlias(signingKeyAlias)
-                setKeyPassword(signingKeyPassword)
-            }
-        }
-        buildTypes {
-            release {
-                signingConfig = signingConfigs.getByName("release")
-                minifyEnabled false
-            }
-        }
+        versionName "1.0"
     }
 }
 
