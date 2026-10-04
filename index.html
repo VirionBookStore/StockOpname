@@ -75,8 +75,12 @@
           <div>
             <h3 class="text-base font-bold text-slate-800">Daftar Master Barang</h3>
             <p class="text-xs text-slate-500">Kelola inventaris barang dan harga.</p>
+            <div id="masterDbStatus" class="text-[10px] text-slate-400 mt-1">Database lokal: memeriksa...</div>
           </div>
-          <button onclick="openAddModal()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition shadow-sm">+ Tambah Barang</button>
+          <div class="flex w-full sm:w-auto gap-2">
+            <button onclick="syncMasterDatabase()" id="syncMasterBtn" class="flex-1 sm:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-bold transition">🔄 Sinkronkan</button>
+              <button onclick="openAddModal()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition shadow-sm">+ Tambah Barang</button>
+          </div>
         </div>
         
         <!-- FORM PENCARIAN MASTER BARANG -->
@@ -106,7 +110,13 @@
       <!-- TAB OPNAME -->
       <div id="tabOpnameContent" class="space-y-4 hidden">
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 max-w-xl mx-auto space-y-3">
-          <h3 class="text-sm font-bold text-slate-800 border-b pb-2">Form Hitung Fisik SO</h3>
+          <div class="flex items-center justify-between border-b pb-2 gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">Form Hitung Fisik SO</h3>
+              <div id="soDbStatus" class="text-[10px] text-slate-400 mt-0.5">Database lokal: memeriksa...</div>
+            </div>
+            <button type="button" onclick="syncMasterDatabase()" id="syncSoDbBtn" class="shrink-0 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1.5 rounded-lg text-[10px] font-bold">🔄 Update Master</button>
+          </div>
 
           <form id="opnameForm" onsubmit="event.preventDefault(); handleSaveOpname(event);" class="space-y-3">
             
@@ -306,7 +316,15 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbziaQEN9Yib9x5MTLBSPTfgS6jY3cdGkM5d6glaVmSsR4_aYQDGJTdpcDkC6-T_O7ul5w/exec"; 
 
     let globalProducts = [];
+    let selectedProductCache = null;
     let globalHistory = [];
+    let productDb = null;
+    let productDbReady = null;
+    let masterSyncInProgress = false;
+    const PRODUCT_DB_NAME = 'VirionSO_LocalDB';
+    const PRODUCT_DB_VERSION = 1;
+    const PRODUCT_STORE = 'products';
+    const PRODUCT_META_STORE = 'meta';
     let currentUserNama = '';
     let currentUserRole = '';
     let html5QrCode = null;
@@ -395,6 +413,103 @@
       }
     });
 
+    // ========================= DATABASE MASTER LOKAL =========================
+    function openProductDatabase() {
+      if (productDbReady) return productDbReady;
+      productDbReady = new Promise((resolve, reject) => {
+        if (!('indexedDB' in window)) { reject(new Error('IndexedDB tidak didukung oleh browser ini.')); return; }
+        const req = indexedDB.open(PRODUCT_DB_NAME, PRODUCT_DB_VERSION);
+        req.onupgradeneeded = function(e) {
+          const db = e.target.result;
+          let store;
+          if (!db.objectStoreNames.contains(PRODUCT_STORE)) store = db.createObjectStore(PRODUCT_STORE, { keyPath: 'sku' });
+          else store = e.target.transaction.objectStore(PRODUCT_STORE);
+          if (!store.indexNames.contains('skuLower')) store.createIndex('skuLower', 'skuLower', { unique: false });
+          if (!store.indexNames.contains('namaLower')) store.createIndex('namaLower', 'namaLower', { unique: false });
+          if (!db.objectStoreNames.contains(PRODUCT_META_STORE)) db.createObjectStore(PRODUCT_META_STORE, { keyPath: 'key' });
+        };
+        req.onsuccess = e => { productDb = e.target.result; resolve(productDb); };
+        req.onerror = e => reject(e.target.error || new Error('Database lokal gagal dibuka.'));
+      });
+      return productDbReady;
+    }
+
+    function normalizeProduct(p) {
+      return { sku:String(p.sku ?? '').trim(), nama:String(p.nama ?? ''), kategori:String(p.kategori ?? ''), stok:Number(p.stok)||0, harga:Number(p.harga)||0, supplier:String(p.supplier ?? '-'), skuLower:String(p.sku ?? '').trim().toLowerCase(), namaLower:String(p.nama ?? '').toLowerCase() };
+    }
+
+    async function getLocalProductCount() {
+      const db=await openProductDatabase();
+      return new Promise((resolve,reject)=>{const tx=db.transaction(PRODUCT_STORE,'readonly');const req=tx.objectStore(PRODUCT_STORE).count();req.onsuccess=()=>resolve(req.result||0);req.onerror=()=>reject(req.error);});
+    }
+
+    async function getLocalMeta() {
+      const db=await openProductDatabase();
+      return new Promise(resolve=>{const req=db.transaction(PRODUCT_META_STORE,'readonly').objectStore(PRODUCT_META_STORE).get('master');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>resolve(null);});
+    }
+
+    async function setLocalMeta(meta) {
+      const db=await openProductDatabase();
+      return new Promise((resolve,reject)=>{const tx=db.transaction(PRODUCT_META_STORE,'readwrite');tx.objectStore(PRODUCT_META_STORE).put({key:'master',...meta});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+    }
+
+    async function updateLocalDbStatus() {
+      try {
+        const count=await getLocalProductCount(); const meta=await getLocalMeta();
+        const when=meta&&meta.updatedAt?new Date(meta.updatedAt).toLocaleString('id-ID'):'belum pernah';
+        const text=count>0?'Database lokal: '+count.toLocaleString('id-ID')+' barang • '+when:'Database lokal: belum ada master';
+        ['masterDbStatus','soDbStatus'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=text;}); return count;
+      } catch(e) { ['masterDbStatus','soDbStatus'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Database lokal tidak tersedia';}); return 0; }
+    }
+
+    async function putProductsToLocalDb(products) {
+      const db=await openProductDatabase();
+      await new Promise((resolve,reject)=>{const tx=db.transaction(PRODUCT_STORE,'readwrite');tx.objectStore(PRODUCT_STORE).clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+      const batchSize=1000;
+      for(let start=0;start<products.length;start+=batchSize){
+        const batch=products.slice(start,start+batchSize).map(normalizeProduct).filter(p=>p.sku);
+        await new Promise((resolve,reject)=>{const tx=db.transaction(PRODUCT_STORE,'readwrite');const store=tx.objectStore(PRODUCT_STORE);batch.forEach(p=>store.put(p));tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+        const pct=Math.min(100,Math.round(((start+batch.length)/products.length)*100));
+        ['syncMasterBtn','syncSoDbBtn'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='⏳ '+pct+'%';});
+      }
+      await setLocalMeta({count:products.length,updatedAt:new Date().toISOString()});
+    }
+
+    async function upsertLocalProduct(product) {
+      const db=await openProductDatabase(); const p=normalizeProduct(product); if(!p.sku)return;
+      await new Promise((resolve,reject)=>{const tx=db.transaction(PRODUCT_STORE,'readwrite');tx.objectStore(PRODUCT_STORE).put(p);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+    }
+
+    async function syncMasterDatabase() {
+      if(masterSyncInProgress)return; masterSyncInProgress=true;
+      const buttons=['syncMasterBtn','syncSoDbBtn'];
+      buttons.forEach(id=>{const el=document.getElementById(id);if(el){el.disabled=true;el.textContent='⏳ Mengambil master...';}});
+      try {
+        const response=await callGasApi('getProducts');
+        if(!response||response.status!=='success'||!Array.isArray(response.data))throw new Error(response?.message||'Master barang gagal diambil.');
+        await putProductsToLocalDb(response.data);
+        globalProducts=response.data.length<=10000?response.data:[];
+        localStorage.removeItem('so_cache_products');
+        await updateLocalDbStatus(); await loadLocalProductPage('');
+        showSuccessNotification('Database lokal berhasil diperbarui: '+response.data.length.toLocaleString('id-ID')+' barang.');
+      } catch(e) { alert('Gagal sinkronisasi master: '+(e.message||e)); }
+      finally { masterSyncInProgress=false; buttons.forEach(id=>{const el=document.getElementById(id);if(el){el.disabled=false;el.textContent='🔄 '+(id==='syncSoDbBtn'?'Update Master':'Sinkronkan');}}); updateLocalDbStatus(); }
+    }
+
+    async function getLocalProductBySku(sku) {
+      const db=await openProductDatabase();
+      return new Promise(resolve=>{const req=db.transaction(PRODUCT_STORE,'readonly').objectStore(PRODUCT_STORE).index('skuLower').get(String(sku).trim().toLowerCase());req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>resolve(null);});
+    }
+
+    async function searchLocalProducts(keyword,limit=50) {
+      const db=await openProductDatabase(); const q=String(keyword||'').toLowerCase().trim();
+      return new Promise(resolve=>{const out=[];const req=db.transaction(PRODUCT_STORE,'readonly').objectStore(PRODUCT_STORE).openCursor();req.onsuccess=e=>{const cursor=e.target.result;if(!cursor||out.length>=limit){resolve(out);return;}const p=cursor.value;if(!q||(p.skuLower+' '+p.namaLower).includes(q))out.push(p);cursor.continue();};req.onerror=()=>resolve(out);});
+    }
+
+    async function loadLocalProductPage(keyword='') {
+      try { const count=await getLocalProductCount(); if(!count){renderProducts([]);return;} renderProducts(await searchLocalProducts(keyword,50)); } catch(e) {}
+    }
+
     async function callGasApi(action, payload = {}) {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         return new Promise((resolve) => {
@@ -418,13 +533,7 @@
     }
 
     window.onload = function() {
-      const cachedProducts = localStorage.getItem('so_cache_products');
-      if (cachedProducts) {
-        try {
-          globalProducts = JSON.parse(cachedProducts);
-          renderProducts(globalProducts);
-        } catch(e) {}
-      }
+      openProductDatabase().then(async () => { await updateLocalDbStatus(); await loadLocalProductPage(''); }).catch(() => {});
 
       callGasApi('getAppConfig').then(res => {
         if(res && res.logoUrl) updateUICustomLogo(res.logoUrl);
@@ -503,8 +612,8 @@
       document.getElementById('loginSection').classList.add('hidden');
       document.getElementById('dashboardSection').classList.remove('hidden');
       applyRoleRestrictions(role);
-      loadProducts();
       loadOpnameHistory();
+      updateLocalDbStatus();
     }
 
     function handleLogin(event) {
@@ -577,17 +686,8 @@
       }
     }
 
-    function loadProducts() {
-      callGasApi('getProducts').then(response => {
-        if (response && response.status === 'success') {
-          globalProducts = response.data;
-          localStorage.setItem('so_cache_products', JSON.stringify(globalProducts));
-          
-          const keyword = document.getElementById('searchMasterBarang').value;
-          if(keyword) filterMasterBarang();
-          else renderProducts(globalProducts);
-        }
-      });
+    async function loadProducts() {
+      await syncMasterDatabase();
     }
 
     function renderProducts(products) {
@@ -610,68 +710,68 @@
     }
 
     function filterMasterBarang() {
-      const keyword = document.getElementById('searchMasterBarang').value.toLowerCase();
-      const filtered = globalProducts.filter(p => 
-        (p.sku + " " + p.nama + " " + p.kategori).toLowerCase().includes(keyword)
-      );
-      renderProducts(filtered);
+      const keyword = document.getElementById('searchMasterBarang').value;
+      clearTimeout(window.masterSearchTimer);
+      window.masterSearchTimer = setTimeout(() => loadLocalProductPage(keyword), 180);
     }
 
-    function handleSearchInput(val) {
+    async function handleSearchInput(val) {
       const cleanVal = val.toLowerCase().trim();
       const dropdown = document.getElementById('searchDropdownResults');
-      
       if (cleanVal === "") {
         dropdown.classList.add('hidden');
         dropdown.innerHTML = "";
         document.getElementById('selectedProductIndex').value = "";
+        selectedProductCache = null;
         document.getElementById('displayStokSistem').value = 0;
         document.getElementById('displayHargaSatuan').value = 0;
         document.getElementById('displaySupplier').value = "-";
-        toggleMasterFields(false); 
+        toggleMasterFields(false);
         return;
       }
-
-      const filtered = globalProducts.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => {
-        return (p.sku + " " + p.nama).toLowerCase().includes(cleanVal);
-      });
-
+      const filtered = await searchLocalProducts(cleanVal, 30);
       if (filtered.length === 0) {
         dropdown.classList.add('hidden');
         dropdown.innerHTML = "";
         showTopNotification("Barang tidak ada di Master (Bisa input manual)");
         document.getElementById('selectedProductIndex').value = "MANUAL";
+        selectedProductCache = null;
         document.getElementById('isManualEntry').value = "true";
         document.getElementById('saveOpnameBtn').classList.remove('hidden');
-        toggleMasterFields(true); 
+        toggleMasterFields(true);
         return;
       }
-
       let html = '';
       filtered.forEach(item => {
-        html += `<div onclick="selectProductByIndex(${item.originalIndex})" class="p-2.5 hover:bg-slate-50 cursor-pointer border-b text-xs transition">
-          <div class="font-bold text-slate-800">${item.sku} - ${item.nama}</div>
-          <div class="text-[10px] text-slate-500">Stok Sistem: ${item.stok} | Harga: Rp ${item.harga}</div>
-        </div>`;
+        const safeSku = String(item.sku).replace(/'/g, "\\'");
+        html += '<div onclick="selectProductBySku(\'' + safeSku + '\')" class="p-2.5 hover:bg-slate-50 cursor-pointer border-b text-xs transition">' +
+          '<div class="font-bold text-slate-800">' + item.sku + ' - ' + item.nama + '</div>' +
+          '<div class="text-[10px] text-slate-500">Stok Sistem: ' + item.stok + ' | Harga: Rp ' + item.harga + '</div></div>';
       });
       dropdown.innerHTML = html;
       dropdown.classList.remove('hidden');
     }
-
     function selectProductByIndex(idx) {
       const p = globalProducts[idx];
-      document.getElementById('selectedProductIndex').value = idx;
+      if (p) selectProduct(p);
+    }
+
+    async function selectProductBySku(sku) {
+      const p = await getLocalProductBySku(sku);
+      if (p) selectProduct(p);
+    }
+
+    function selectProduct(p) {
+      selectedProductCache = p;
+      document.getElementById('selectedProductIndex').value = p.sku;
       document.getElementById('isManualEntry').value = "false";
-      document.getElementById('displaySelectedName').value = `${p.sku} - ${p.nama}`;
+      document.getElementById('displaySelectedName').value = p.sku + " - " + p.nama;
       document.getElementById('displayStokSistem').value = p.stok;
       document.getElementById('displayHargaSatuan').value = p.harga || 0;
       document.getElementById('displaySupplier').value = p.supplier || '-';
       document.getElementById('searchDropdownResults').classList.add('hidden');
       document.getElementById('varianceResultBox').classList.add('hidden');
-
-      toggleMasterFields(false); 
-
-      // Setelah barang berhasil dipilih/di-scan, langsung fokus ke Qty agar proses SO lebih cepat.
+      toggleMasterFields(false);
       focusQtyInput();
       fetchPreviousSoAndApply(p.sku);
     }
@@ -737,10 +837,10 @@
       } else {
         // Tunggu kamera benar-benar berhenti agar fokus Qty tidak tertahan oleh modal scanner.
         await closeScannerModal();
-        const exactIdx = globalProducts.findIndex(p => p.sku.toLowerCase() === cleanCode);
+        const exactProduct = await getLocalProductBySku(cleanCode);
         
-        if (exactIdx !== -1) {
-          selectProductByIndex(exactIdx);
+        if (exactProduct) {
+          selectProduct(exactProduct);
         } else {
           // JIKA TIDAK COCOK 100% (Contoh beda 1 angka):
           // Akan men-trigger event 'input' agar sistem memunculkan Dropdown 
@@ -879,7 +979,11 @@
         hargaVal = Number(document.getElementById('displayHargaSatuan').value) || 0;
         supVal = document.getElementById('displaySupplier').value || "-";
       } else {
-        const p = globalProducts[idx];
+        const p = selectedProductCache;
+        if (!p) {
+          alert("Data barang lokal belum siap. Silakan scan/cari kembali.");
+          return;
+        }
         skuVal = p.sku; 
         namaVal = p.nama; 
         stokSys = Number(p.stok) || 0; 
@@ -914,6 +1018,7 @@
       document.getElementById('opnameStokFisik').value = "";
       document.getElementById('opnameKeterangan').value = "";
       document.getElementById('selectedProductIndex').value = "";
+      selectedProductCache = null;
       document.getElementById('isManualEntry').value = "false";
       document.getElementById('displaySelectedName').value = "";
       document.getElementById('displayStokSistem').value = 0;
@@ -1081,14 +1186,16 @@
       closeAddModal();
       callGasApi('addProduct', payload).then(r => { 
         if (r && r.status === 'success') { 
-          loadProducts(); 
+          await upsertLocalProduct(payload);
+          await updateLocalDbStatus();
+          await loadLocalProductPage(document.getElementById('searchMasterBarang').value);
           showSuccessNotification("Barang baru berhasil disimpan!"); 
         } 
       });
     }
 
-    function openEditModal(sku) {
-      const p = globalProducts.find(item => item.sku === sku);
+    async function openEditModal(sku) {
+      const p = await getLocalProductBySku(sku);
       if(!p) return;
       editOldSku = p.sku;
       document.getElementById('editSku').value = p.sku;
@@ -1127,7 +1234,9 @@
         btn.disabled = false; btn.textContent = "Simpan";
         if (r && r.status === 'success') {
           closeEditModal();
-          loadProducts(); 
+          await upsertLocalProduct(payload);
+          await updateLocalDbStatus();
+          await loadLocalProductPage(document.getElementById('searchMasterBarang').value);
           showSuccessNotification("Data barang berhasil diupdate!");
           document.getElementById('searchMasterBarang').value = ""; 
         } else {
