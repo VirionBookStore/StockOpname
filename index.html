@@ -671,7 +671,27 @@
 
       toggleMasterFields(false); 
 
+      // Setelah barang berhasil dipilih/di-scan, langsung fokus ke Qty agar proses SO lebih cepat.
+      focusQtyInput();
       fetchPreviousSoAndApply(p.sku);
+    }
+
+    // Fokus otomatis ke input Qty/Stok Fisik setelah scan atau pemilihan barang.
+    // select() membuat angka lama langsung terseleksi sehingga operator bisa langsung mengetik Qty baru.
+    function focusQtyInput() {
+      const qtyInput = document.getElementById('opnameStokFisik');
+      const mode = document.getElementById('soModeSelect').value;
+      if (!qtyInput || mode === 'otomatis') return;
+
+      const doFocus = () => {
+        qtyInput.focus({ preventScroll: false });
+        try { qtyInput.select(); } catch (e) {}
+      };
+
+      doFocus();
+      // Android/WebView kadang baru menerima fokus setelah modal scanner benar-benar tertutup.
+      setTimeout(doFocus, 150);
+      setTimeout(doFocus, 450);
     }
 
     function fetchPreviousSoAndApply(sku) {
@@ -701,13 +721,13 @@
           document.getElementById('opnameKeterangan').value = "Scan Otomatis";
           handleSaveOpname();
         } else {
-          document.getElementById('opnameStokFisik').focus();
+          focusQtyInput();
         }
       });
     }
 
     // FUNGSI DIPERBARUI: Memicu dropdown saat barcode scan diproses
-    function processScannedCode(code) {
+    async function processScannedCode(code) {
       playBeepSound();
       const cleanCode = code.toLowerCase().trim();
       
@@ -715,7 +735,8 @@
         document.getElementById('addSku').value = code;
         closeScannerModal();
       } else {
-        closeScannerModal();
+        // Tunggu kamera benar-benar berhenti agar fokus Qty tidak tertahan oleh modal scanner.
+        await closeScannerModal();
         const exactIdx = globalProducts.findIndex(p => p.sku.toLowerCase() === cleanCode);
         
         if (exactIdx !== -1) {
@@ -765,8 +786,9 @@
           (decodedText) => {
             if (isProcessingScan) return;
             isProcessingScan = true;
-            processScannedCode(decodedText);
-            setTimeout(() => { isProcessingScan = false; }, 1200);
+            processScannedCode(decodedText).finally(() => {
+              setTimeout(() => { isProcessingScan = false; }, 300);
+            });
           }, 
           (errorMessage) => {}
         ).then(() => {
@@ -778,19 +800,17 @@
       }, 300);
     }
 
-    function closeScannerModal() {
+    async function closeScannerModal() {
       if (html5QrCode && isScannerRunning) {
-        html5QrCode.stop().then(() => {
-          isScannerRunning = false;
-          html5QrCode.clear();
-          document.getElementById('scannerModal').classList.add('hidden');
-        }).catch(() => {
-          isScannerRunning = false;
-          document.getElementById('scannerModal').classList.add('hidden');
-        });
-      } else {
-        document.getElementById('scannerModal').classList.add('hidden');
+        try {
+          await html5QrCode.stop();
+        } catch (e) {
+          // Lanjutkan menutup modal walaupun kamera sudah berhenti lebih dulu.
+        }
+        isScannerRunning = false;
+        try { html5QrCode.clear(); } catch (e) {}
       }
+      document.getElementById('scannerModal').classList.add('hidden');
     }
 
     function calculateVariance() {
