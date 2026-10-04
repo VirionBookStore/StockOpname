@@ -544,8 +544,26 @@
         if(res && res.logoUrl) updateUICustomLogo(res.logoUrl);
       });
 
-      const savedUser = localStorage.getItem('so_user_nama');
-      const savedRole = localStorage.getItem('so_user_role');
+      let savedUser = localStorage.getItem('so_user_nama');
+      let savedRole = localStorage.getItem('so_user_role');
+
+      // APK: gunakan penyimpanan native sebagai cadangan jika WebView kehilangan localStorage.
+      try {
+        if ((!savedUser || !savedRole) && window.AndroidInterface && AndroidInterface.getSession) {
+          const encoded = AndroidInterface.getSession();
+          if (encoded) {
+            const decoded = atob(encoded);
+            const parts = decoded.split('\n');
+            if (parts[0] && parts[1]) {
+              savedUser = parts[0];
+              savedRole = parts[1];
+              localStorage.setItem('so_user_nama', savedUser);
+              localStorage.setItem('so_user_role', savedRole);
+            }
+          }
+        }
+      } catch (e) {}
+
       if (savedUser && savedRole) {
         masukDashboard(savedUser, savedRole);
       }
@@ -634,6 +652,11 @@
           if (response.status === 'success') {
             localStorage.setItem('so_user_nama', response.nama);
             localStorage.setItem('so_user_role', response.role);
+            try {
+              if (window.AndroidInterface && AndroidInterface.saveSession) {
+                AndroidInterface.saveSession(String(response.nama || ''), String(response.role || ''));
+              }
+            } catch (e) {}
             masukDashboard(response.nama, response.role);
           } else {
             alertBox.textContent = response.message;
@@ -645,6 +668,9 @@
     function handleLogout() {
       if (confirm("Apakah anda benar ingin keluar?")) { 
         window.removeEventListener('beforeunload', null);
+        try {
+          if (window.AndroidInterface && AndroidInterface.clearSession) AndroidInterface.clearSession();
+        } catch (e) {}
         localStorage.clear(); 
         location.reload(); 
       }
