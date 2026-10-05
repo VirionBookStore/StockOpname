@@ -192,7 +192,7 @@
           <div class="flex justify-between items-center mb-2">
             <h4 class="font-bold text-slate-800 text-xs uppercase">Riwayat Terakhir</h4>
             <div class="flex items-center gap-2">
-              <select id="adminHistoryFilter" onchange="renderHistoryList()" class="hidden text-[10px] bg-slate-50 border border-slate-200 rounded-md px-2 py-1 font-semibold text-slate-700"></select>
+              <button id="historyFilterBtn" type="button" onclick="openHistoryFilter()" class="hidden text-[10px] bg-slate-50 border border-slate-200 rounded-md px-2.5 py-1 font-semibold text-slate-700">🔽 Filter</button>
               
               <button onclick="exportRiwayatToExcel()" class="border border-emerald-300 rounded-md px-2.5 py-1 bg-emerald-50 text-[10px] text-emerald-700 flex items-center gap-1 hover:bg-emerald-100 transition font-semibold">
                 📊 Excel
@@ -1089,28 +1089,94 @@
       });
     }
 
+    let historyFilterState = { users: [], sessions: [] };
+
     function updateHistoryDropdown() {
-      const dropdown = document.getElementById('adminHistoryFilter');
-      if (!dropdown || dropdown.classList.contains('hidden')) return;
-      
-      const currentVal = dropdown.value;
-      let users = [...new Set(globalHistory.map(h => h.petugas))].filter(Boolean);
-      
-      let html = `<option value="ALL">Semua Riwayat</option>`;
-      html += `<option value="${currentUserNama}">Riwayat Saya</option>`;
-      users.forEach(u => {
-        if (u !== currentUserNama) {
-          html += `<option value="${u}">Riwayat ${u}</option>`;
-        }
-      });
-      
-      dropdown.innerHTML = html;
-      if (currentVal && (users.includes(currentVal) || currentVal === "ALL" || currentVal === currentUserNama)) {
-        dropdown.value = currentVal;
+      const btn = document.getElementById('historyFilterBtn');
+      if (!btn) return;
+      const roleStr = String(currentUserRole || '').toLowerCase();
+      if (roleStr !== 'owner') {
+        btn.classList.add('hidden');
+        return;
       }
+      btn.classList.remove('hidden');
+    }
+
+    function openHistoryFilter() {
+      if (String(currentUserRole || '').toLowerCase() !== 'owner') return;
+
+      let modal = document.getElementById('historyFilterModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'historyFilterModal';
+        modal.className = 'fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-3 z-[9999]';
+        modal.innerHTML = `
+          <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3">
+            <div class="flex justify-between items-center border-b pb-2">
+              <h3 class="font-bold text-sm text-slate-800">Filter Riwayat</h3>
+              <button type="button" onclick="closeHistoryFilter()" class="font-bold text-lg text-slate-500">&times;</button>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-700 mb-1">👤 Filter User</div>
+              <div id="historyUserChecks" class="max-h-36 overflow-y-auto border rounded-xl p-2 space-y-1"></div>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-700 mb-1">🏷️ Filter Sesi</div>
+              <div id="historySessionChecks" class="max-h-36 overflow-y-auto border rounded-xl p-2 space-y-1"></div>
+            </div>
+            <div class="flex gap-2 pt-1">
+              <button type="button" onclick="resetHistoryFilter()" class="flex-1 py-2 bg-slate-100 rounded-xl text-xs font-semibold">Reset</button>
+              <button type="button" onclick="applyHistoryFilter()" class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold">Terapkan</button>
+            </div>
+          </div>`;
+        document.body.appendChild(modal);
+      }
+
+      const users = [...new Set(globalHistory.map(h => h.petugas).filter(Boolean))].sort();
+      const sessions = [...new Set(globalHistory.map(h => h.judulSesi).filter(Boolean))].sort();
+
+      const makeChecks = (items, type, selected) => items.length
+        ? items.map((v, i) => `<label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-50 text-xs"><input type="checkbox" data-history-filter="${type}" value="${String(v).replace(/"/g,'&quot;')}" ${selected.includes(v) ? 'checked' : ''} class="h-4 w-4"><span>${v}</span></label>`).join('')
+        : '<div class="text-[11px] text-slate-400 p-1">Tidak ada data</div>';
+
+      document.getElementById('historyUserChecks').innerHTML = makeChecks(users, 'user', historyFilterState.users);
+      document.getElementById('historySessionChecks').innerHTML = makeChecks(sessions, 'session', historyFilterState.sessions);
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeHistoryFilter() {
+      const modal = document.getElementById('historyFilterModal');
+      if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    }
+
+    function resetHistoryFilter() {
+      historyFilterState = { users: [], sessions: [] };
+      closeHistoryFilter();
+      renderHistoryList();
+      updateHistoryFilterButton();
+    }
+
+    function applyHistoryFilter() {
+      historyFilterState = {
+        users: [...document.querySelectorAll('#historyUserChecks input:checked')].map(x => x.value),
+        sessions: [...document.querySelectorAll('#historySessionChecks input:checked')].map(x => x.value)
+      };
+      closeHistoryFilter();
+      renderHistoryList();
+      updateHistoryFilterButton();
+    }
+
+    function updateHistoryFilterButton() {
+      const btn = document.getElementById('historyFilterBtn');
+      if (!btn) return;
+      const count = historyFilterState.users.length + historyFilterState.sessions.length;
+      btn.textContent = count ? `🔽 Filter (${count})` : '🔽 Filter';
     }
 
     function renderHistoryList() {
+      updateHistoryFilterButton();
       const mobileList = document.getElementById('opnameHistoryMobile');
       if (!globalHistory || globalHistory.length === 0) {
         mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Belum ada riwayat SO.</div>`;
@@ -1133,20 +1199,22 @@
     }
 
     function getFilteredHistoryData() {
+      const roleStr = String(currentUserRole || '').toLowerCase();
       let filteredData = globalHistory;
-      const roleStr = currentUserRole.toLowerCase();
-      
+
       if (roleStr === 'user' || roleStr === 'staff') {
-        filteredData = globalHistory.filter(h => h.petugas === currentUserNama);
-      } else {
-        const filterDropdown = document.getElementById('adminHistoryFilter');
-        if (filterDropdown) {
-          const filterVal = filterDropdown.value;
-          if (filterVal && filterVal !== "ALL") {
-            filteredData = globalHistory.filter(h => h.petugas === filterVal);
-          }
+        return globalHistory.filter(h => h.petugas === currentUserNama);
+      }
+
+      if (roleStr === 'owner') {
+        if (historyFilterState.users.length) {
+          filteredData = filteredData.filter(h => historyFilterState.users.includes(h.petugas));
+        }
+        if (historyFilterState.sessions.length) {
+          filteredData = filteredData.filter(h => historyFilterState.sessions.includes(h.judulSesi));
         }
       }
+
       return filteredData;
     }
 
@@ -1180,9 +1248,10 @@
       const roleStr = currentUserRole.toLowerCase();
       let fileLabel = currentUserNama;
       
-      if (roleStr !== 'user' && roleStr !== 'staff') {
-        const filterDropdown = document.getElementById('adminHistoryFilter');
-        fileLabel = filterDropdown ? filterDropdown.value : 'Semua';
+      if (roleStr === 'owner') {
+        const userLabel = historyFilterState.users.length ? historyFilterState.users.join('-') : 'SemuaUser';
+        const sessionLabel = historyFilterState.sessions.length ? historyFilterState.sessions.join('-') : 'SemuaSesi';
+        fileLabel = userLabel + '_' + sessionLabel;
       }
 
       const dateStr = new Date().toISOString().slice(0, 10);
