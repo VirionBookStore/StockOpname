@@ -98,93 +98,43 @@ public class MainActivity extends Activity {
             "(function() {" +
             "if(window.__virionApkExportInstalled)return;" +
             "window.__virionApkExportInstalled=true;" +
-
-            // Ubah tombol Bagikan dan Refresh menjadi ikon saja.
             "var shareBtns=document.querySelectorAll('button[onclick=\\\"exportRiwayatToExcel()\\\"]');" +
-            "for(var i=0;i<shareBtns.length;i++){shareBtns[i].innerHTML='📤';shareBtns[i].title='Bagikan / Simpan Excel';shareBtns[i].setAttribute('aria-label','Bagikan / Simpan Excel');shareBtns[i].className=shareBtns[i].className.replace(/px-2\\.5|px-2/g,'px-3')+' justify-center';}" +
+            "for(var i=0;i<shareBtns.length;i++){shareBtns[i].innerHTML='📤';shareBtns[i].title='Bagikan / Simpan Excel';shareBtns[i].setAttribute('aria-label','Bagikan / Simpan Excel');}" +
             "var refreshBtns=document.querySelectorAll('button[onclick=\\\"loadOpnameHistory()\\\"]');" +
             "for(var i=0;i<refreshBtns.length;i++){refreshBtns[i].innerHTML='🔄';refreshBtns[i].title='Refresh riwayat';refreshBtns[i].setAttribute('aria-label','Refresh riwayat');}" +
 
-            // Filter multi-pilih user + sesi.
             "window.__virionFilterState={users:[],sessions:[]};" +
-            "window.__virionFilterReady=false;" +
             "window.__virionEnsureFilters=function(){" +
               "if(document.getElementById('virionFilterButton'))return;" +
-              "var old=document.getElementById('adminHistoryFilter');" +
-              "if(old)old.classList.add('hidden');" +
-              "var share=document.querySelector('button[onclick=\\\"exportRiwayatToExcel()\\\"]');" +
-              "if(!share)return;" +
+              "var old=document.getElementById('adminHistoryFilter');if(old)old.classList.add('hidden');" +
+              "var share=document.querySelector('button[onclick=\\\"exportRiwayatToExcel()\\\"]');if(!share)return;" +
               "var wrap=share.parentElement;" +
-              "var btn=document.createElement('button');" +
-              "btn.id='virionFilterButton';btn.type='button';btn.innerHTML='⚙️';btn.title='Filter User & Sesi';" +
-              "btn.className='text-[10px] bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-md font-medium text-slate-600';" +
-              "btn.onclick=function(){window.__virionOpenFilter();};" +
-              "wrap.insertBefore(btn,share);" +
-
-              "var modal=document.createElement('div');" +
-              "modal.id='virionFilterModal';" +
-              "modal.className='fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-3 z-[99999]';" +
-              "modal.innerHTML='<div class=\\\"bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3\\\">'+"+
-                "'<div class=\\\"flex justify-between items-center border-b pb-2\\\"><h3 class=\\\"font-bold text-sm text-slate-800\\\">Filter Riwayat</h3><button type=\\\"button\\\" id=\\\"virionFilterClose\\\" class=\\\"font-bold text-lg text-slate-500\\\">&times;</button></div>'+"+
-                "'<div><div class=\\\"text-xs font-bold text-slate-700 mb-1\\\">👤 User</div><div id=\\\"virionUserChecks\\\" class=\\\"max-h-36 overflow-y-auto border rounded-xl p-2 space-y-1\\\"></div></div>'+"+
-                "'<div><div class=\\\"text-xs font-bold text-slate-700 mb-1\\\">🏷️ Sesi</div><div id=\\\"virionSessionChecks\\\" class=\\\"max-h-36 overflow-y-auto border rounded-xl p-2 space-y-1\\\"></div></div>'+"+
-                "'<div class=\\\"flex gap-2 pt-1\\\"><button type=\\\"button\\\" id=\\\"virionFilterReset\\\" class=\\\"flex-1 py-2 bg-slate-100 rounded-xl text-xs font-semibold\\\">Reset</button><button type=\\\"button\\\" id=\\\"virionFilterApply\\\" class=\\\"flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold\\\">Terapkan</button></div>'+"+
-              "'</div>';" +
+              "var btn=document.createElement('button');btn.id='virionFilterButton';btn.type='button';btn.innerHTML='⚙️';btn.title='Filter User & Sesi';btn.className='text-[10px] bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-md font-medium text-slate-600';btn.onclick=function(){window.__virionOpenFilter();};wrap.insertBefore(btn,share);" +
+              "var modal=document.createElement('div');modal.id='virionFilterModal';modal.className='fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-3 z-[99999]';" +
+              "modal.innerHTML='<div class=\\\"bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 space-y-3\\\"><div class=\\\"flex justify-between items-center border-b pb-2\\\"><h3 class=\\\"font-bold text-sm text-slate-800\\\">Filter Riwayat</h3><button type=\\\"button\\\" id=\\\"virionFilterClose\\\" class=\\\"font-bold text-lg text-slate-500\\\">&times;</button></div><div><div class=\\\"text-xs font-bold text-slate-700 mb-1\\\">👤 User</div><div id=\\\"virionUserChecks\\\" class=\\\"max-h-36 overflow-y-auto border rounded-xl p-2 space-y-1\\\"></div></div><div><div class=\\\"text-xs font-bold text-slate-700 mb-1\\\">🏷️ Sesi</div><div id=\\\"virionSessionChecks\\\" class=\\\"max-h-36 overflow-y-auto border rounded-xl p-2 space-y-1\\\"></div></div><div class=\\\"flex gap-2 pt-1\\\"><button type=\\\"button\\\" id=\\\"virionFilterReset\\\" class=\\\"flex-1 py-2 bg-slate-100 rounded-xl text-xs font-semibold\\\">Reset</button><button type=\\\"button\\\" id=\\\"virionFilterApply\\\" class=\\\"flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold\\\">Terapkan</button></div></div>';" +
               "document.body.appendChild(modal);" +
               "document.getElementById('virionFilterClose').onclick=function(){modal.classList.add('hidden');modal.classList.remove('flex');};" +
               "document.getElementById('virionFilterReset').onclick=function(){window.__virionFilterState={users:[],sessions:[]};window.__virionOpenFilter();};" +
               "document.getElementById('virionFilterApply').onclick=function(){window.__virionReadFilter();modal.classList.add('hidden');modal.classList.remove('flex');if(window.renderHistoryList)window.renderHistoryList();};" +
-              "window.__virionFilterReady=true;" +
             "};" +
 
             "window.__virionBuildChecks=function(){" +
-              "var users=[...new Set((window.globalHistory||[]).map(function(h){return h.petugas;}).filter(Boolean))].sort();" +
-              "var sessions=[...new Set((window.globalHistory||[]).map(function(h){return h.judulSesi;}).filter(Boolean))].sort();" +
-              "var us=document.getElementById('virionUserChecks'),ss=document.getElementById('virionSessionChecks');" +
-              "if(!us||!ss)return;" +
-              "function make(list,name,selected){return list.map(function(v,i){var id=name+'_'+i;var checked=selected.indexOf(v)>=0?' checked':'';return '<label class=\\\"flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-50 text-xs\\\"><input type=\\\"checkbox\\\" data-filter=\\\"'+name+'\\\" value=\\\"'+String(v).replace(/\\\"/g,'&quot;')+'\\\"'+checked+' class=\\\"h-4 w-4\\\">'+String(v)+'</label>';}).join('')||'<div class=\\\"text-[11px] text-slate-400 p-1\\\">Tidak ada data</div>';}" +
-              "us.innerHTML=make(users,'user',window.__virionFilterState.users);" +
-              "ss.innerHTML=make(sessions,'session',window.__virionFilterState.sessions);" +
+              "var users=[...new Set(globalHistory.map(function(h){return h.petugas;}).filter(Boolean))].sort();" +
+              "var sessions=[...new Set(globalHistory.map(function(h){return h.judulSesi;}).filter(Boolean))].sort();" +
+              "var us=document.getElementById('virionUserChecks'),ss=document.getElementById('virionSessionChecks');if(!us||!ss)return;" +
+              "function make(list,name,selected){return list.map(function(v,i){var checked=selected.indexOf(v)>=0?' checked':'';return '<label class=\\\"flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-50 text-xs\\\"><input type=\\\"checkbox\\\" data-filter=\\\"'+name+'\\\" value=\\\"'+String(v).replace(/\\\"/g,'&quot;')+'\\\"'+checked+' class=\\\"h-4 w-4\\\">'+String(v)+'</label>';}).join('')||'<div class=\\\"text-[11px] text-slate-400 p-1\\\">Tidak ada data</div>';}" +
+              "us.innerHTML=make(users,'user',window.__virionFilterState.users);ss.innerHTML=make(sessions,'session',window.__virionFilterState.sessions);" +
             "};" +
 
-            "window.__virionOpenFilter=function(){" +
-              "window.__virionEnsureFilters();window.__virionBuildChecks();" +
-              "var m=document.getElementById('virionFilterModal');if(m){m.classList.remove('hidden');m.classList.add('flex');}" +
-            "};" +
+            "window.__virionOpenFilter=function(){window.__virionEnsureFilters();window.__virionBuildChecks();var m=document.getElementById('virionFilterModal');if(m){m.classList.remove('hidden');m.classList.add('flex');}};" +
+            "window.__virionReadFilter=function(){var us=[...document.querySelectorAll('#virionUserChecks input:checked')].map(function(x){return x.value;});var ss=[...document.querySelectorAll('#virionSessionChecks input:checked')].map(function(x){return x.value;});window.__virionFilterState={users:us,sessions:ss};};" +
 
-            "window.__virionReadFilter=function(){" +
-              "var us=[...document.querySelectorAll('#virionUserChecks input:checked')].map(function(x){return x.value;});" +
-              "var ss=[...document.querySelectorAll('#virionSessionChecks input:checked')].map(function(x){return x.value;});" +
-              "window.__virionFilterState={users:us,sessions:ss};" +
-            "};" +
+            "window.getFilteredHistoryData=function(){var data=globalHistory;var role=currentUserRole.toLowerCase();var st=window.__virionFilterState||{users:[],sessions:[]};if(role==='user'||role==='staff'){data=data.filter(function(h){return h.petugas===currentUserNama;});}else if(st.users.length){data=data.filter(function(h){return st.users.indexOf(h.petugas)>=0;});}if(st.sessions.length){data=data.filter(function(h){return st.sessions.indexOf(h.judulSesi)>=0;});}return data;};" +
 
-            // Override filter data: user dan sesi dapat dipilih lebih dari satu.
-            "window.getFilteredHistoryData=function(){" +
-              "var data=window.globalHistory||[];var role=(window.currentUserRole||'').toLowerCase();var st=window.__virionFilterState||{users:[],sessions:[]};" +
-              "if(role==='user'||role==='staff'){data=data.filter(function(h){return h.petugas===window.currentUserNama;});}" +
-              "else if(st.users&&st.users.length){data=data.filter(function(h){return st.users.indexOf(h.petugas)>=0;});}" +
-              "if(st.sessions&&st.sessions.length){data=data.filter(function(h){return st.sessions.indexOf(h.judulSesi)>=0;});}" +
-              "return data;" +
-            "};" +
+            "window.exportRiwayatToExcel=function(){var dataToExport=getFilteredHistoryData();if(!dataToExport||dataToExport.length===0){alert('Tidak ada data riwayat sesuai filter!');return;}var rows=dataToExport.map(function(h,index){return {'No':index+1,'Waktu':h.waktu,'Petugas':h.petugas||'-','Sesi SO':h.judulSesi||'1','SKU / Barcode':h.sku,'Nama Barang':h.namaBarang,'Stok Sistem':h.stokSistem,'Stok Fisik':h.stokFisik,'Selisih':h.selisih,'Harga (Rp)':h.harga||0,'Supplier':h.supplier||'-','Catatan':h.keterangan||'-'};});var ws=XLSX.utils.json_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Laporan Stock Opname');var roleStr=currentUserRole.toLowerCase();var fileLabel=(roleStr==='user'||roleStr==='staff')?currentUserNama:'Filter';var dateStr=new Date().toISOString().slice(0,10);var fileName='Laporan_SO_'+fileLabel+'_'+dateStr+'.xlsx';var base64=XLSX.write(wb,{bookType:'xlsx',type:'base64'});if(window.AndroidInterface&&window.AndroidInterface.exportExcel){window.AndroidInterface.exportExcel(fileName,base64);}else{XLSX.writeFile(wb,fileName);}};" +
 
-            "window.exportRiwayatToExcel=function(){" +
-            "var dataToExport=getFilteredHistoryData();" +
-            "if(!dataToExport||dataToExport.length===0){alert('Tidak ada data riwayat sesuai filter!');return;}" +
-            "var rows=dataToExport.map(function(h,index){return {'No':index+1,'Waktu':h.waktu,'Petugas':h.petugas||'-','Sesi SO':h.judulSesi||'1','SKU / Barcode':h.sku,'Nama Barang':h.namaBarang,'Stok Sistem':h.stokSistem,'Stok Fisik':h.stokFisik,'Selisih':h.selisih,'Harga (Rp)':h.harga||0,'Supplier':h.supplier||'-','Catatan':h.keterangan||'-'};});" +
-            "var ws=XLSX.utils.json_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Laporan Stock Opname');" +
-            "var roleStr=currentUserRole.toLowerCase();var fileLabel='Filter';" +
-            "if(roleStr==='user'||roleStr==='staff'){fileLabel=currentUserNama;}" +
-            "var dateStr=new Date().toISOString().slice(0,10);var fileName='Laporan_SO_'+fileLabel+'_'+dateStr+'.xlsx';" +
-            "var base64=XLSX.write(wb,{bookType:'xlsx',type:'base64'});" +
-            "if(window.AndroidInterface&&window.AndroidInterface.exportExcel){window.AndroidInterface.exportExcel(fileName,base64);}else{XLSX.writeFile(wb,fileName);}" +
-            "};" +
-
-            // Pasang filter setelah riwayat tersedia dan setelah perubahan DOM.
-            "window.__virionEnsureFilters();" +
-            "setTimeout(window.__virionEnsureFilters,500);" +
-            "setTimeout(window.__virionEnsureFilters,1500);" +
-            "var oldLoad=window.loadOpnameHistory;" +
-            "window.loadOpnameHistory=function(){var r=oldLoad.apply(this,arguments);setTimeout(function(){window.__virionEnsureFilters();},400);return r;};" +
+            "window.__virionEnsureFilters();setTimeout(window.__virionEnsureFilters,500);setTimeout(window.__virionEnsureFilters,1500);" +
+            "var oldLoad=window.loadOpnameHistory;window.loadOpnameHistory=function(){var r=oldLoad.apply(this,arguments);setTimeout(function(){window.__virionEnsureFilters();},400);return r;};" +
             "})();";
         w.evaluateJavascript(script, null);
     }
