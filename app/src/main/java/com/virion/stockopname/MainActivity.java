@@ -105,6 +105,7 @@ public class MainActivity extends Activity {
 
             "window.__virionFilterState={users:[],sessions:[]};" +
             "window.__virionEnsureFilters=function(){" +
+              "var role=String(window.currentUserRole||'').toLowerCase();if(role!=='owner'){var ub=document.getElementById('virionFilterButton');if(ub)ub.remove();var um=document.getElementById('virionFilterModal');if(um)um.remove();return;}" +
               "if(document.getElementById('virionFilterButton'))return;" +
               "var old=document.getElementById('adminHistoryFilter');if(old)old.classList.add('hidden');" +
               "var share=document.querySelector('button[onclick=\\\"exportRiwayatToExcel()\\\"]');if(!share)return;" +
