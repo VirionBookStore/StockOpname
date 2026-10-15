@@ -193,7 +193,7 @@
       <div id="tabHasilContent" class="space-y-4 hidden">
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 mx-auto space-y-3">
           
-          <!-- HEADER KARTU HASIL SO: Judul + Dropdown Tampilan Data (di samping Refresh) -->
+          <!-- HEADER KARTU HASIL SO -->
           <div class="flex items-center justify-between border-b pb-2 mb-2 gap-2">
             <h3 class="text-sm font-bold text-slate-800 shrink-0">Laporan Hasil SO</h3>
             <div class="flex items-center gap-1.5 shrink-0">
@@ -1111,6 +1111,7 @@
       return filteredData;
     }
 
+    // ====== RENDERING HASIL SO DENGAN FALLBACK HARGA MASTER BARANG ======
     function renderHasilSO() {
       const tbody = document.getElementById('hasilTableBody');
       const thead = document.getElementById('hasilTableHead');
@@ -1142,14 +1143,19 @@
         const aggregatedMap = {};
         filteredRaw.forEach(h => {
           const key = (h.sku || '').toString().trim().toLowerCase() || 'manual';
+          const masterProd = globalProducts.find(p => (p.sku || '').toString().trim().toLowerCase() === key);
+          const actualHarga = Number(h.harga) || (masterProd ? Number(masterProd.harga) : 0);
+
           if (!aggregatedMap[key]) {
             aggregatedMap[key] = {
-              sku: h.sku || '-',
-              namaBarang: h.namaBarang || '-',
-              harga: Number(h.harga) || 0,
-              stokSistem: Number(h.stokSistem) || 0,
+              sku: h.sku || (masterProd ? masterProd.sku : '-'),
+              namaBarang: h.namaBarang || (masterProd ? masterProd.nama : '-'),
+              harga: actualHarga,
+              stokSistem: Number(h.stokSistem) || (masterProd ? Number(masterProd.stok) : 0),
               stokFisikTotal: 0
             };
+          } else if (!aggregatedMap[key].harga && actualHarga) {
+            aggregatedMap[key].harga = actualHarga;
           }
           aggregatedMap[key].stokFisikTotal += Number(h.stokFisik) || 0;
         });
@@ -1159,7 +1165,7 @@
 
         listRekap.forEach(item => {
           const selisih = item.stokFisikTotal - item.stokSistem;
-          const fmtHarga = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.harga);
+          const fmtHarga = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.harga || 0);
           
           let badgeSelisih = selisih === 0 
             ? `<span class="text-emerald-600 font-bold">0</span>` 
@@ -1202,7 +1208,10 @@
 
         let htmlDesktop = '', htmlMobile = '';
         filteredRaw.forEach(h => {
-          const fmtHarga = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(h.harga || 0);
+          const key = (h.sku || '').toString().trim().toLowerCase();
+          const masterProd = globalProducts.find(p => (p.sku || '').toString().trim().toLowerCase() === key);
+          const actualHarga = Number(h.harga) || (masterProd ? Number(masterProd.harga) : 0);
+          const fmtHarga = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(actualHarga);
           
           htmlDesktop += `<tr class="hover:bg-slate-50 border-b text-xs">
             <td class="p-3 font-semibold text-slate-800">${h.sku}</td>
@@ -1246,14 +1255,19 @@
         
         filteredRaw.forEach(h => {
           const key = (h.sku || '').toString().trim().toLowerCase() || 'manual';
+          const masterProd = globalProducts.find(p => (p.sku || '').toString().trim().toLowerCase() === key);
+          const actualHarga = Number(h.harga) || (masterProd ? Number(masterProd.harga) : 0);
+
           if (!aggregatedMap[key]) {
             aggregatedMap[key] = {
-              sku: h.sku || '-',
-              namaBarang: h.namaBarang || '-',
-              harga: Number(h.harga) || 0,
-              stokSistem: Number(h.stokSistem) || 0,
+              sku: h.sku || (masterProd ? masterProd.sku : '-'),
+              namaBarang: h.namaBarang || (masterProd ? masterProd.nama : '-'),
+              harga: actualHarga,
+              stokSistem: Number(h.stokSistem) || (masterProd ? Number(masterProd.stok) : 0),
               stokFisikTotal: 0
             };
+          } else if (!aggregatedMap[key].harga && actualHarga) {
+            aggregatedMap[key].harga = actualHarga;
           }
           aggregatedMap[key].stokFisikTotal += Number(h.stokFisik) || 0;
         });
@@ -1275,6 +1289,10 @@
       } else {
         let csv = 'Waktu,Sesi,Petugas,SKU,Nama Barang,Stok Sistem,Stok Fisik,Selisih,Harga,Supplier,Keterangan\n';
         filteredRaw.forEach(h => {
+          const key = (h.sku || '').toString().trim().toLowerCase();
+          const masterProd = globalProducts.find(p => (p.sku || '').toString().trim().toLowerCase() === key);
+          const actualHarga = Number(h.harga) || (masterProd ? Number(masterProd.harga) : 0);
+
           let row = [
             `"${h.waktu}"`,
             `"${h.judulSesi}"`,
@@ -1284,7 +1302,7 @@
             `"${h.stokSistem}"`,
             `"${h.stokFisik}"`,
             `"${h.selisih}"`,
-            `"${h.harga || 0}"`,
+            `"${actualHarga}"`,
             `"${h.supplier || '-'}"`,
             `"${h.keterangan || '-'}"`
           ];
