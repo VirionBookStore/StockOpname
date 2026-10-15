@@ -54,7 +54,8 @@
           <p class="text-[10px] sm:text-xs text-slate-500"><span id="userNameText" class="font-semibold text-slate-700"></span> (<span id="userRoleText" class="uppercase font-bold text-blue-600"></span>)</p>
         </div>
       </div>
-      <div class="flex space-x-2">
+      <div class="flex space-x-1.5 sm:space-x-2">
+        <button onclick="syncIndexedDB()" title="Perbarui Database Lokal" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition border border-indigo-200 flex items-center gap-1">💾 Sync IndexedDB</button>
         <button id="btnSettingLogo" onclick="openLogoModal()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition border">Ubah Logo</button>
         <button onclick="handleLogout()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition border border-rose-200">Keluar</button>
       </div>
@@ -140,7 +141,7 @@
             <div id="inputSectionManual" class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Stok Fisik</label>
-                <input type="number" id="opnameStokFisik" min="0" oninput="calculateVariance()" placeholder="Qty..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs">
+                <input type="number" id="opnameStokFisik" min="0" oninput="calculateVariance()" placeholder="Qty..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold">
               </div>
               <div>
                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Catatan</label>
@@ -154,19 +155,41 @@
           </form>
         </div>
 
-        <!-- RIWAYAT OPNAME KECIL -->
+        <!-- RIWAYAT OPNAME PADAT & RINGKAS -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-3">
           <div class="flex justify-between items-center mb-2">
             <h4 class="font-bold text-slate-800 text-xs uppercase">Riwayat Terakhir</h4>
-            <button onclick="loadOpnameHistory()" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md font-medium text-slate-600">🔄 Refresh</button>
+            <div class="flex gap-2">
+              <button onclick="loadOpnameHistory()" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md font-medium text-slate-600">🔄 Refresh</button>
+            </div>
           </div>
-          <div id="opnameHistoryMobile" class="space-y-2">
+          <!-- TABEL DESKTOP PADAT -->
+          <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b text-slate-600 text-xs uppercase font-semibold">
+                  <th class="p-2.5">SKU</th>
+                  <th class="p-2.5">Nama Barang</th>
+                  <th class="p-2.5 text-center">Qty Syst</th>
+                  <th class="p-2.5 text-center">Fisik</th>
+                  <th class="p-2.5 text-center">Selisih</th>
+                  <th class="p-2.5">Sesi</th>
+                  <th class="p-2.5">User</th>
+                </tr>
+              </thead>
+              <tbody id="opnameHistoryTableBody" class="divide-y text-xs text-slate-700">
+                <tr><td colspan="7" class="p-3 text-center text-slate-400">Memuat riwayat...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- LIST MOBILE COMPACT -->
+          <div id="opnameHistoryMobile" class="md:hidden space-y-2">
             <div class="text-center text-slate-400 text-xs py-3">Memuat riwayat...</div>
           </div>
         </div>
       </div>
 
-      <!-- TAB HASIL SO BARU -->
+      <!-- TAB HASIL SO -->
       <div id="tabHasilContent" class="space-y-4 hidden">
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 mx-auto space-y-3">
           
@@ -175,7 +198,7 @@
             <button onclick="loadOpnameHistory()" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md font-medium text-slate-600">🔄 Sinkronisasi Data</button>
           </div>
 
-          <!-- KONTROL OWNER (Filter Tipe, User, Sesi & Bagikan) -->
+          <!-- KONTROL OWNER -->
           <div id="ownerControls" class="hidden flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl mb-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
@@ -195,7 +218,6 @@
               </div>
             </div>
             
-            <!-- TOMBOL SIMPAN & BAGIKAN EXCEL -->
             <div class="grid grid-cols-2 gap-2 mt-1">
               <button onclick="downloadExcel()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-[11px] font-bold transition shadow-sm flex items-center justify-center gap-1">
                 💾 Simpan (Excel)
@@ -206,7 +228,6 @@
             </div>
           </div>
 
-          <!-- PENCARIAN & SCAN HASIL -->
           <div class="flex gap-2">
             <input type="text" id="searchHasil" oninput="renderHasilSO()" placeholder="Cari SKU atau Nama Barang..." class="w-full px-3 py-2 border border-slate-300 bg-white rounded-lg text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
             <button type="button" onclick="openScannerModal('HASIL_SO')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-lg text-xs font-semibold shadow-sm shrink-0">
@@ -214,7 +235,6 @@
             </button>
           </div>
 
-          <!-- TABEL DESKTOP HASIL SO -->
           <div class="hidden md:block bg-white rounded-xl border border-slate-200 overflow-hidden mt-3 shadow-sm">
             <table class="w-full text-left border-collapse">
               <thead id="hasilTableHead"></thead>
@@ -224,7 +244,6 @@
             </table>
           </div>
 
-          <!-- LIST MOBILE HASIL SO -->
           <div id="hasilSOMobileList" class="md:hidden space-y-2 mt-3 max-h-[60vh] overflow-y-auto pb-4">
             <div class="text-center text-slate-400 text-xs py-3">Memuat laporan...</div>
           </div>
@@ -320,6 +339,75 @@
     let isProcessingScan = false;
     let currentScannerTarget = 'SO'; 
 
+    // ===========================================
+    // LOGIKA INDEXEDDB LOCAL STORAGE
+    // ===========================================
+    const DB_NAME = 'VirionSO_IDB';
+    const DB_VERSION = 1;
+
+    function initIndexedDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('products')) db.createObjectStore('products', { keyPath: 'sku' });
+          if (!db.objectStoreNames.contains('history')) db.createObjectStore('history', { autoIncrement: true });
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function saveToIDB(storeName, dataArray) {
+      try {
+        const db = await initIndexedDB();
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        await store.clear();
+        if (Array.isArray(dataArray)) {
+          dataArray.forEach(item => store.put(item));
+        }
+      } catch (err) {
+        console.error("Gagal simpan ke IndexedDB:", err);
+      }
+    }
+
+    async function loadFromIDB(storeName) {
+      try {
+        const db = await initIndexedDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction(storeName, 'readonly');
+          const store = tx.objectStore(storeName);
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => resolve([]);
+        });
+      } catch (err) {
+        return [];
+      }
+    }
+
+    async function syncIndexedDB() {
+      showTopNotification("Proses Sinkronisasi IndexedDB...");
+      const prodRes = await callGasApi('getProducts');
+      if (prodRes && prodRes.status === 'success') {
+        globalProducts = prodRes.data || [];
+        await saveToIDB('products', globalProducts);
+        renderProducts(globalProducts);
+      }
+
+      const histRes = await callGasApi('getHistory');
+      if (histRes && histRes.status === 'success') {
+        globalHistory = histRes.data || [];
+        await saveToIDB('history', globalHistory);
+        renderHistoryList();
+        updateUserFilter();
+        renderHasilSO();
+      }
+      alert("Database IndexedDB Lokal Berhasil Diperbarui!");
+    }
+    // ===========================================
+
     function playBeepSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -406,15 +494,23 @@
       }
     }
 
-    window.onload = function() {
-      const cachedProducts = localStorage.getItem('so_cache_products');
-      if (cachedProducts) {
-        try {
-          globalProducts = JSON.parse(cachedProducts);
-          renderProducts(globalProducts);
-        } catch(e) {}
+    window.onload = async function() {
+      // 1. Muat awal dari IndexedDB
+      const localProducts = await loadFromIDB('products');
+      if (localProducts && localProducts.length > 0) {
+        globalProducts = localProducts;
+        renderProducts(globalProducts);
       }
 
+      const localHistory = await loadFromIDB('history');
+      if (localHistory && localHistory.length > 0) {
+        globalHistory = localHistory;
+        renderHistoryList();
+        updateUserFilter();
+        renderHasilSO();
+      }
+
+      // 2. Muat konfigurasi logo
       callGasApi('getAppConfig').then(res => {
         if(res && res.logoUrl) updateUICustomLogo(res.logoUrl);
       });
@@ -570,8 +666,8 @@
     function loadProducts() {
       callGasApi('getProducts').then(response => {
         if (response && response.status === 'success') {
-          globalProducts = response.data;
-          localStorage.setItem('so_cache_products', JSON.stringify(globalProducts));
+          globalProducts = response.data || [];
+          saveToIDB('products', globalProducts);
           renderProducts(globalProducts);
         }
       });
@@ -620,6 +716,7 @@
         document.getElementById('selectedProductIndex').value = "MANUAL";
         document.getElementById('isManualEntry').value = "true";
         document.getElementById('saveOpnameBtn').classList.remove('hidden');
+        calculateVariance();
         return;
       }
 
@@ -643,12 +740,14 @@
       document.getElementById('displayHargaSatuan').value = p.harga || 0;
       document.getElementById('displaySupplier').value = p.supplier || '-';
       document.getElementById('searchDropdownResults').classList.add('hidden');
-      document.getElementById('varianceResultBox').classList.add('hidden');
+
+      calculateVariance();
 
       const mode = document.getElementById('soModeSelect').value;
       if (mode === 'otomatis') {
         document.getElementById('opnameStokFisik').value = document.getElementById('autoQtyInput').value;
         document.getElementById('opnameKeterangan').value = "Scan Otomatis";
+        calculateVariance();
         handleSaveOpname();
       } else {
         document.getElementById('opnameStokFisik').focus();
@@ -680,6 +779,7 @@
           document.getElementById('displaySupplier').value = "Manual";
           document.getElementById('saveOpnameBtn').classList.remove('hidden');
           showTopNotification("Barang tidak ada di Master (Bisa input manual)");
+          calculateVariance();
           document.getElementById('opnameStokFisik').focus();
         }
       }
@@ -748,17 +848,61 @@
       }
     }
 
+    // ====== KALKULASI SELISIH AKUMULATIF SO SEBELUMNYA ======
+    function getPreviousSoQtyForCurrentSku() {
+      const isManual = document.getElementById('isManualEntry').value === "true";
+      let skuVal = "";
+      if (isManual) {
+        const rawInput = document.getElementById('displaySelectedName').value.trim();
+        const parts = rawInput.split(' - ');
+        skuVal = parts.length >= 2 ? parts[0].trim() : rawInput;
+      } else {
+        const idx = document.getElementById('selectedProductIndex').value;
+        if (idx !== "" && idx !== "MANUAL" && globalProducts[idx]) {
+          skuVal = globalProducts[idx].sku;
+        }
+      }
+      if (!skuVal) return 0;
+
+      const targetSku = skuVal.toLowerCase().trim();
+      let totalSebelumnya = 0;
+      globalHistory.forEach(h => {
+        if ((h.sku || '').toString().toLowerCase().trim() === targetSku) {
+          totalSebelumnya += Number(h.stokFisik) || 0;
+        }
+      });
+      return totalSebelumnya;
+    }
+
     function calculateVariance() {
       const stokSistem = Number(document.getElementById('displayStokSistem').value) || 0;
       const val = document.getElementById('opnameStokFisik').value;
       const box = document.getElementById('varianceResultBox');
       const text = document.getElementById('varianceText');
-      if (val === "") { box.classList.add('hidden'); return; }
-      const selisih = Number(val) - stokSistem;
+
+      const soSebelumnya = getPreviousSoQtyForCurrentSku();
+      const soSekarang = Number(val) || 0;
+
+      if (val === "" && soSebelumnya === 0) { 
+        box.classList.add('hidden'); 
+        return; 
+      }
+
+      const totalFisik = soSebelumnya + soSekarang;
+      const selisih = totalFisik - stokSistem;
+
       box.classList.remove('hidden');
-      if (selisih === 0) { box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-emerald-50 text-emerald-700'; text.textContent = '0 (Sesuai)'; }
-      else if (selisih > 0) { box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-blue-50 text-blue-700'; text.textContent = `+${selisih} (Surplus)`; }
-      else { box.className = 'p-2 rounded-lg text-xs font-medium text-center bg-rose-50 text-rose-700'; text.textContent = `${selisih} (Minus)`; }
+
+      const badgeText = `Qty Syst ${stokSistem} | SO Sebelum ${soSebelumnya} | SO Skrg ${soSekarang} | Selisih ${selisih >= 0 ? '+' : ''}${selisih}`;
+
+      if (selisih === 0) { 
+        box.className = 'p-2 rounded-lg text-xs font-semibold text-center bg-emerald-50 text-emerald-700 border border-emerald-200'; 
+      } else if (selisih > 0) { 
+        box.className = 'p-2 rounded-lg text-xs font-semibold text-center bg-blue-50 text-blue-700 border border-blue-200'; 
+      } else { 
+        box.className = 'p-2 rounded-lg text-xs font-semibold text-center bg-rose-50 text-rose-700 border border-rose-200'; 
+      }
+      text.textContent = badgeText;
     }
 
     function handleSaveOpname(event) {
@@ -811,6 +955,8 @@
       };
 
       globalHistory.unshift(localRecord);
+      saveToIDB('history', globalHistory);
+
       renderHistoryList();
       updateUserFilter(); 
       renderHasilSO();
@@ -839,6 +985,7 @@
       callGasApi('getHistory').then(response => {
         if (response && response.status === 'success') {
           globalHistory = response.data || [];
+          saveToIDB('history', globalHistory);
           renderHistoryList();
           updateUserFilter();
           renderHasilSO();
@@ -846,10 +993,14 @@
       });
     }
 
+    // ====== RENDERING RIWAYAT TERAKHIR TABEL PADAT ======
     function renderHistoryList() {
+      const tbody = document.getElementById('opnameHistoryTableBody');
       const mobileList = document.getElementById('opnameHistoryMobile');
+      
       if (!globalHistory || globalHistory.length === 0) {
-        mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Belum ada riwayat SO.</div>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="p-3 text-center text-slate-400">Belum ada riwayat SO.</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Belum ada riwayat SO.</div>`;
         return;
       }
       
@@ -859,16 +1010,30 @@
       }
       
       if (filteredData.length === 0) {
-        mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Tidak ada riwayat untuk pengguna ini.</div>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="p-3 text-center text-slate-400">Tidak ada riwayat untuk pengguna ini.</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="text-center text-slate-400 text-xs py-3">Tidak ada riwayat untuk pengguna ini.</div>`;
         return;
       }
 
-      let html = '';
-      filteredData.slice(0, 10).forEach(h => {
+      let htmlDesktop = '', htmlMobile = '';
+      filteredData.slice(0, 15).forEach(h => {
         let badge = h.selisih === 0 ? `<span class="text-emerald-600 font-bold">0</span>` : (h.selisih > 0 ? `<span class="text-blue-600 font-bold">+${h.selisih}</span>` : `<span class="text-rose-600 font-bold">${h.selisih}</span>`);
-        html += `<div class="bg-slate-50 p-2.5 rounded-xl border text-[11px] space-y-1"><div class="flex justify-between text-slate-400"><span>${h.waktu} • <b class="text-slate-600">${h.petugas || '-'}</b></span><span class="font-bold text-blue-600">Sesi: ${h.judulSesi}</span></div><div class="font-bold text-slate-800 text-xs">${h.sku} - ${h.namaBarang}</div><div class="grid grid-cols-3 gap-1"><div>Sistem: <b>${h.stokSistem}</b></div><div>Fisik: <b>${h.stokFisik}</b></div><div>Selisih: ${badge}</div></div></div>`;
+        
+        htmlDesktop += `<tr class="hover:bg-slate-50 border-b text-xs">
+          <td class="p-2.5 font-semibold text-slate-800">${h.sku}</td>
+          <td class="p-2.5 font-medium text-slate-800">${h.namaBarang}</td>
+          <td class="p-2.5 text-center font-bold text-slate-600">${h.stokSistem}</td>
+          <td class="p-2.5 text-center font-bold text-blue-600">${h.stokFisik}</td>
+          <td class="p-2.5 text-center">${badge}</td>
+          <td class="p-2.5"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold text-[10px]">Sesi ${h.judulSesi}</span></td>
+          <td class="p-2.5 font-medium text-slate-700">${h.petugas || '-'}</td>
+        </tr>`;
+
+        htmlMobile += `<div class="bg-slate-50 p-2.5 rounded-xl border text-[11px] space-y-1"><div class="flex justify-between text-slate-400"><span>${h.waktu} • <b class="text-slate-600">${h.petugas || '-'}</b></span><span class="font-bold text-blue-600">Sesi: ${h.judulSesi}</span></div><div class="font-bold text-slate-800 text-xs">${h.sku} - ${h.namaBarang}</div><div class="grid grid-cols-3 gap-1"><div>Sistem: <b>${h.stokSistem}</b></div><div>Fisik: <b>${h.stokFisik}</b></div><div>Selisih: ${badge}</div></div></div>`;
       });
-      mobileList.innerHTML = html;
+
+      if (tbody) tbody.innerHTML = htmlDesktop;
+      if (mobileList) mobileList.innerHTML = htmlMobile;
     }
 
     function updateUserFilter() {
@@ -938,7 +1103,7 @@
       return filteredData;
     }
 
-    // ====== RENDERING TABEL & LIST HASIL SO (DENGAN FILTER DATA BARANG) ======
+    // ====== RENDERING HASIL SO ======
     function renderHasilSO() {
       const tbody = document.getElementById('hasilTableBody');
       const thead = document.getElementById('hasilTableHead');
@@ -957,7 +1122,6 @@
       }
 
       if (filterTipe === 'rekap') {
-        // --- MODE FILTER DATA BARANG (REKAP PER BARANG) ---
         thead.innerHTML = `
           <tr class="bg-slate-50 border-b text-slate-600 text-xs uppercase font-semibold">
             <th class="p-3">SKU</th>
@@ -976,11 +1140,11 @@
               sku: h.sku || '-',
               namaBarang: h.namaBarang || '-',
               harga: Number(h.harga) || 0,
-              stokSistem: Number(h.stokSistem) || 0, // Stok sistem tidak dijumlahkan
+              stokSistem: Number(h.stokSistem) || 0,
               stokFisikTotal: 0
             };
           }
-          aggregatedMap[key].stokFisikTotal += Number(h.stokFisik) || 0; // Stok fisik dijumlahkan
+          aggregatedMap[key].stokFisikTotal += Number(h.stokFisik) || 0;
         });
 
         const listRekap = Object.values(aggregatedMap);
@@ -1018,7 +1182,6 @@
         mobileList.innerHTML = htmlMobile;
 
       } else {
-        // --- MODE DETAIL RIWAYAT ---
         thead.innerHTML = `
           <tr class="bg-slate-50 border-b text-slate-600 text-xs uppercase font-semibold">
             <th class="p-3">SKU</th>
@@ -1054,7 +1217,7 @@
             <div class="font-bold text-slate-800 pt-1">${h.sku} - ${h.namaBarang}</div>
             <div class="grid grid-cols-3 gap-1 pt-1 text-center bg-slate-50 p-1.5 rounded-lg text-[11px]">
               <div>Sys: <b>${h.stokSistem}</b></div>
-              <div>Fisik: <b class="text-blue-600">${h.stokFisik}</b></div>
+              <div>Fisik: <b>${h.stokFisik}</b></div>
               <div>Selisih: ${badge}</div>
             </div>
           </div>`;
@@ -1065,7 +1228,6 @@
       }
     }
 
-    // ====== LOGIKA GENERATE CSV DENGAN MENDUKUNG OPSI REKAP ======
     function generateCSV() {
       const filterTipeEl = document.getElementById('filterTipe');
       const filterTipe = filterTipeEl ? filterTipeEl.value : 'detail';
