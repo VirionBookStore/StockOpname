@@ -15,6 +15,24 @@
     <span id="topNotificationText">Barang tidak ada di Master (Bisa input manual)</span>
   </div>
 
+  <!-- MODAL PROGRESS SINKRONISASI INDEXEDDB -->
+  <div id="syncProgressModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-[99999]">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-5 text-center space-y-4 border border-slate-100">
+      <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold animate-bounce">
+        💾
+      </div>
+      <div>
+        <h3 class="font-bold text-slate-800 text-sm">Sinkronisasi IndexedDB</h3>
+        <p id="syncProgressStatus" class="text-xs text-slate-500 mt-1">Menghubungkan ke server...</p>
+      </div>
+      <!-- Progress Bar -->
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
+        <div id="syncProgressBar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full w-0 transition-all duration-300 rounded-full"></div>
+      </div>
+      <div id="syncPercentText" class="text-xs font-bold text-indigo-600">0%</div>
+    </div>
+  </div>
+
   <!-- HALAMAN LOGIN -->
   <div id="loginSection" class="flex items-center justify-center flex-grow p-4">
     <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200">
@@ -389,14 +407,36 @@
       }
     }
 
+    // ====== SINKRONISASI INDEXEDDB DENGAN PROGRESS BAR & AUTO CLOSE ======
     async function syncIndexedDB() {
-      showTopNotification("Proses Sinkronisasi IndexedDB...");
+      const modal = document.getElementById('syncProgressModal');
+      const bar = document.getElementById('syncProgressBar');
+      const percentText = document.getElementById('syncPercentText');
+      const statusText = document.getElementById('syncProgressStatus');
+
+      // Tampilkan Modal & Reset 0%
+      bar.style.width = '0%';
+      percentText.textContent = '0%';
+      statusText.textContent = 'Menghubungkan ke server...';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      // Step 1: Mengunduh Master Barang (30%)
+      bar.style.width = '30%';
+      percentText.textContent = '30%';
+      statusText.textContent = 'Mengunduh Master Barang...';
+      
       const prodRes = await callGasApi('getProducts');
       if (prodRes && prodRes.status === 'success') {
         globalProducts = prodRes.data || [];
         await saveToIDB('products', globalProducts);
         renderProducts(globalProducts);
       }
+
+      // Step 2: Mengunduh Riwayat SO (75%)
+      bar.style.width = '75%';
+      percentText.textContent = '75%';
+      statusText.textContent = 'Mengunduh Riwayat SO...';
 
       const histRes = await callGasApi('getHistory');
       if (histRes && histRes.status === 'success') {
@@ -406,7 +446,18 @@
         updateUserFilter();
         renderHasilSO();
       }
-      alert("Database IndexedDB Lokal Berhasil Diperbarui!");
+
+      // Step 3: Selesai 100%
+      bar.style.width = '100%';
+      percentText.textContent = '100%';
+      statusText.textContent = 'Sinkronisasi Selesai!';
+
+      // Otomatis tutup modal setelah 800ms tanpa popup alert
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        showTopNotification("✅ Database IndexedDB Berhasil Diperbarui!");
+      }, 800);
     }
     // ===========================================
 
@@ -546,7 +597,7 @@
           btn.disabled = false; btn.textContent = "Simpan Logo";
           if (res.status === 'success') {
               updateUICustomLogo(res.logoUrl); closeLogoModal();
-          } else alert(res.message);
+          } else showTopNotification(res.message);
       };
 
       if (fileInput.files.length > 0) {
@@ -911,13 +962,12 @@
       const sesiVal = sesiInput.value.trim();
       if (!sesiVal) {
         showTopNotification("⚠️ Silakan isi Nama Sesi SO terlebih dahulu!");
-        alert("Nama Sesi SO belum diisi! Silakan masukkan nama sesi terlebih dahulu.");
         sesiInput.focus();
         return;
       }
 
       const idx = document.getElementById('selectedProductIndex').value;
-      if (idx === "") { alert("Silakan pilih atau scan barang terlebih dahulu!"); return; }
+      if (idx === "") { showTopNotification("⚠️ Silakan pilih atau scan barang terlebih dahulu!"); return; }
 
       const isManual = document.getElementById('isManualEntry').value === "true";
       let skuVal = "", namaVal = "", stokSys = 0, hargaVal = 0, supVal = "-";
@@ -1111,7 +1161,6 @@
       return filteredData;
     }
 
-    // ====== RENDERING HASIL SO DENGAN FALLBACK HARGA MASTER BARANG ======
     function renderHasilSO() {
       const tbody = document.getElementById('hasilTableBody');
       const thead = document.getElementById('hasilTableHead');
@@ -1315,7 +1364,7 @@
     function downloadExcel() {
       const list = getFilteredHasilData();
       if (list.length === 0) {
-        alert("Tidak ada data laporan untuk diunduh.");
+        showTopNotification("⚠️ Tidak ada data laporan untuk diunduh.");
         return;
       }
       
@@ -1335,7 +1384,7 @@
     async function shareExcel() {
       const list = getFilteredHasilData();
       if (list.length === 0) {
-        alert("Tidak ada data laporan untuk dibagikan.");
+        showTopNotification("⚠️ Tidak ada data laporan untuk dibagikan.");
         return;
       }
       
@@ -1355,7 +1404,7 @@
           console.log('Share dibatalkan oleh user', err);
         }
       } else {
-        alert("Perangkat/Browser ini tidak mendukung fitur Share File secara langsung. Laporan akan diunduh otomatis.");
+        showTopNotification("Browser tidak mendukung share langsung. File diunduh.");
         downloadExcel();
       }
     }
@@ -1374,7 +1423,7 @@
         supplier: document.getElementById('addSupplier').value 
       };
       closeAddModal();
-      callGasApi('addProduct', payload).then(r => { if (r && r.status === 'success') { loadProducts(); alert("Barang baru berhasil disimpan!"); } });
+      callGasApi('addProduct', payload).then(r => { if (r && r.status === 'success') { loadProducts(); showTopNotification("✅ Barang baru berhasil disimpan!"); } });
     }
   </script>
 </body>
