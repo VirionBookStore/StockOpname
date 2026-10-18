@@ -768,7 +768,7 @@
     function handleSearchInput(val) {
       const dropdown = document.getElementById('searchDropdownResults');
       const cleanVal = String(val || '').normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('id-ID').trim();
+        .replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('id-ID').trim();
 
       if (!cleanVal) {
         if (productSearchTimer) clearTimeout(productSearchTimer);
@@ -783,17 +783,24 @@
         return;
       }
 
-      if (!productSearchIndex.length && globalProducts && globalProducts.length) rebuildProductSearchIndex();
       if (productSearchTimer) clearTimeout(productSearchTimer);
       const requestId = ++productSearchRequest;
       productSearchTimer = setTimeout(() => {
         if (requestId !== productSearchRequest) return;
-        const terms = cleanVal.split(/\s+/).filter(Boolean);
+
+        // Bangun dari daftar master TERKINI agar indeks tidak tertinggal dari
+        // data yang sedang tampil di tab Master. Cocokkan semua kata tanpa urutan tetap.
+        const terms = cleanVal.split(/\\s+/).filter(Boolean);
         const matches = [];
-        for (let i = 0; i < productSearchIndex.length; i++) {
-          const item = productSearchIndex[i];
-          if (terms.every(term => item.searchText.includes(term))) {
-            matches.push(item);
+        const source = globalProducts || [];
+        for (let i = 0; i < source.length; i++) {
+          const p = source[i] || {};
+          const sku = String(p.sku || p.kode || p.SKU || '');
+          const nama = String(p.nama || p.namaBarang || p.name || p.judul || p.title || '');
+          const normalized = (sku + ' ' + nama).normalize('NFD')
+            .replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('id-ID');
+          if (terms.every(term => normalized.includes(term))) {
+            matches.push({ index: i, sku, nama, stok: p.stok, harga: p.harga, supplier: p.supplier });
             if (matches.length >= PRODUCT_SEARCH_LIMIT) break;
           }
         }
@@ -802,11 +809,9 @@
         if (!matches.length) {
           dropdown.classList.add('hidden');
           dropdown.innerHTML = '';
-          showTopNotification('Barang tidak ada di Master (Bisa input manual)');
-          document.getElementById('selectedProductIndex').value = 'MANUAL';
-          document.getElementById('isManualEntry').value = 'true';
-          document.getElementById('saveOpnameBtn').classList.remove('hidden');
-          calculateVariance();
+          // Jangan mengubah mode menjadi manual hanya karena pencarian belum cocok.
+          document.getElementById('selectedProductIndex').value = '';
+          document.getElementById('isManualEntry').value = 'false';
           return;
         }
 
@@ -817,7 +822,6 @@
         dropdown.classList.remove('hidden');
       }, 100);
     }
-
     function selectProductByIndex(idx) {
       const p = globalProducts[idx];
       document.getElementById('selectedProductIndex').value = idx;
