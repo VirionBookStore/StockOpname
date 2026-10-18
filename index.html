@@ -717,7 +717,7 @@
     function loadProducts() {
       callGasApi('getProducts').then(response => {
         if (response && response.status === 'success') {
-          globalProducts = response.data || [];
+          globalProducts = response.data || [];\n          rebuildProductSearchIndex();
           saveToIDB('products', globalProducts);
           renderProducts(globalProducts);
         }
@@ -742,44 +742,77 @@
       mobileList.innerHTML = htmlMobile;
     }
 
+    let productSearchIndex = [];
+    let productSearchTimer = null;
+    let productSearchRequest = 0;
+    const PRODUCT_SEARCH_LIMIT = 40;
+
+    function rebuildProductSearchIndex() {
+      productSearchIndex = (globalProducts || []).map((p, idx) => ({
+        index: idx, sku: String(p.sku || ''), nama: String(p.nama || ''),
+        stok: p.stok, harga: p.harga,
+        searchText: (String(p.sku || '') + ' ' + String(p.nama || ''))
+          .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('id-ID')
+      }));
+    }
+
+    function escapeSearchHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[ch]);
+    }
+
     function handleSearchInput(val) {
-      const cleanVal = val.toLowerCase().trim();
       const dropdown = document.getElementById('searchDropdownResults');
-      
-      if (cleanVal === "") {
+      const cleanVal = String(val || '').normalize('NFD')
+        .replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('id-ID').trim();
+
+      if (!cleanVal) {
+        if (productSearchTimer) clearTimeout(productSearchTimer);
+        productSearchRequest++;
         dropdown.classList.add('hidden');
-        dropdown.innerHTML = "";
-        document.getElementById('selectedProductIndex').value = "";
+        dropdown.innerHTML = '';
+        document.getElementById('selectedProductIndex').value = '';
+        document.getElementById('isManualEntry').value = 'false';
         document.getElementById('displayStokSistem').value = 0;
         document.getElementById('displayHargaSatuan').value = 0;
-        document.getElementById('displaySupplier').value = "-";
+        document.getElementById('displaySupplier').value = '-';
         return;
       }
 
-      const filtered = globalProducts.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => {
-        return (p.sku + " " + p.nama).toLowerCase().includes(cleanVal);
-      });
+      if (!productSearchIndex.length && globalProducts && globalProducts.length) rebuildProductSearchIndex();
+      if (productSearchTimer) clearTimeout(productSearchTimer);
+      const requestId = ++productSearchRequest;
+      productSearchTimer = setTimeout(() => {
+        if (requestId !== productSearchRequest) return;
+        const terms = cleanVal.split(/\\s+/).filter(Boolean);
+        const matches = [];
+        for (let i = 0; i < productSearchIndex.length; i++) {
+          const item = productSearchIndex[i];
+          if (terms.every(term => item.searchText.includes(term))) {
+            matches.push(item);
+            if (matches.length >= PRODUCT_SEARCH_LIMIT) break;
+          }
+        }
 
-      if (filtered.length === 0) {
-        dropdown.classList.add('hidden');
-        dropdown.innerHTML = "";
-        showTopNotification("Barang tidak ada di Master (Bisa input manual)");
-        document.getElementById('selectedProductIndex').value = "MANUAL";
-        document.getElementById('isManualEntry').value = "true";
-        document.getElementById('saveOpnameBtn').classList.remove('hidden');
-        calculateVariance();
-        return;
-      }
+        if (requestId !== productSearchRequest) return;
+        if (!matches.length) {
+          dropdown.classList.add('hidden');
+          dropdown.innerHTML = '';
+          showTopNotification('Barang tidak ada di Master (Bisa input manual)');
+          document.getElementById('selectedProductIndex').value = 'MANUAL';
+          document.getElementById('isManualEntry').value = 'true';
+          document.getElementById('saveOpnameBtn').classList.remove('hidden');
+          calculateVariance();
+          return;
+        }
 
-      let html = '';
-      filtered.forEach(item => {
-        html += `<div onclick="selectProductByIndex(${item.originalIndex})" class="p-2.5 hover:bg-slate-50 cursor-pointer border-b text-xs transition">
-          <div class="font-bold text-slate-800">${item.sku} - ${item.nama}</div>
-          <div class="text-[10px] text-slate-500">Stok Sistem: ${item.stok} | Harga: Rp ${item.harga}</div>
-        </div>`;
-      });
-      dropdown.innerHTML = html;
-      dropdown.classList.remove('hidden');
+        dropdown.innerHTML = matches.map(item => `<div onclick="selectProductByIndex(${item.index})" class="p-2.5 hover:bg-slate-50 cursor-pointer border-b text-xs transition">
+          <div class="font-bold text-slate-800">${escapeSearchHtml(item.sku)} - ${escapeSearchHtml(item.nama)}</div>
+          <div class="text-[10px] text-slate-500">Stok Sistem: ${escapeSearchHtml(item.stok)} | Harga: Rp ${escapeSearchHtml(item.harga)}</div>
+        </div>`).join('');
+        dropdown.classList.remove('hidden');
+      }, 100);
     }
 
     function selectProductByIndex(idx) {
