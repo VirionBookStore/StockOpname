@@ -717,7 +717,8 @@
     function loadProducts() {
       callGasApi('getProducts').then(response => {
         if (response && response.status === 'success') {
-          globalProducts = response.data || [];\n          rebuildProductSearchIndex();
+          globalProducts = response.data || [];
+          rebuildProductSearchIndex();
           saveToIDB('products', globalProducts);
           renderProducts(globalProducts);
         }
