@@ -429,6 +429,7 @@
       const prodRes = await callGasApi('getProducts');
       if (prodRes && prodRes.status === 'success') {
         globalProducts = prodRes.data || [];
+        rebuildProductSearchIndex();
         await saveToIDB('products', globalProducts);
         renderProducts(globalProducts);
       }
@@ -551,6 +552,7 @@
       const localProducts = await loadFromIDB('products');
       if (localProducts && localProducts.length > 0) {
         globalProducts = localProducts;
+        rebuildProductSearchIndex();
         renderProducts(globalProducts);
       }
 
@@ -750,10 +752,10 @@
 
     function rebuildProductSearchIndex() {
       productSearchIndex = (globalProducts || []).map((p, idx) => ({
-        index: idx, sku: String(p.sku || ''), nama: String(p.nama || ''),
+        index: idx, sku: String(p.sku || p.kode || ''), nama: String(p.nama || p.namaBarang || p.name || ''),
         stok: p.stok, harga: p.harga,
-        searchText: (String(p.sku || '') + ' ' + String(p.nama || ''))
-          .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('id-ID')
+        searchText: (String(p.sku || p.kode || '') + ' ' + String(p.nama || p.namaBarang || p.name || ''))
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('id-ID')
       }));
     }
 
@@ -766,7 +768,7 @@
     function handleSearchInput(val) {
       const dropdown = document.getElementById('searchDropdownResults');
       const cleanVal = String(val || '').normalize('NFD')
-        .replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('id-ID').trim();
+        .replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('id-ID').trim();
 
       if (!cleanVal) {
         if (productSearchTimer) clearTimeout(productSearchTimer);
@@ -786,7 +788,7 @@
       const requestId = ++productSearchRequest;
       productSearchTimer = setTimeout(() => {
         if (requestId !== productSearchRequest) return;
-        const terms = cleanVal.split(/\\s+/).filter(Boolean);
+        const terms = cleanVal.split(/\s+/).filter(Boolean);
         const matches = [];
         for (let i = 0; i < productSearchIndex.length; i++) {
           const item = productSearchIndex[i];
